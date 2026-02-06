@@ -9,6 +9,7 @@ owner_id uuid FK -> auth.users.id
 pre_minutes int2
 cook_minutes int2
 servings int2
+heat int2
 
 ## recipe_steps
 id uuid PK
