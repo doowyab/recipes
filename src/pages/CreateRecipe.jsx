@@ -10,13 +10,13 @@ function toIntOrNull(value) {
 
 function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-black/5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 dark:shadow-black/20">
+    <section className="rounded-2xl border border-sky-200 bg-white/80 p-6 shadow-lg shadow-black/5 backdrop-blur dark:border-sky-800 dark:bg-sky-950/70 dark:shadow-black/20">
       <header className="mb-6">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+        <p className="text-xs uppercase tracking-[0.3em] text-sky-500 dark:text-sky-400">
           Step 1
         </p>
         <h2 className="text-2xl font-semibold">Recipe Basics</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-sky-600 dark:text-sky-300">
           Capture the core details to create your recipe.
         </p>
       </header>
@@ -25,7 +25,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
         <label className="form-label">
           <span>Title</span>
           <input
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.title}
             onChange={(event) =>
               setRecipeDraft((prev) => ({ ...prev, title: event.target.value }))
@@ -40,7 +40,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
             type="number"
             min="0"
             step="1"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.servings}
             onChange={(event) =>
               setRecipeDraft((prev) => ({ ...prev, servings: event.target.value }))
@@ -52,7 +52,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
         <label className="form-label md:col-span-2">
           <span>Description</span>
           <textarea
-            className="min-h-[120px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="min-h-[120px] rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.description}
             onChange={(event) =>
               setRecipeDraft((prev) => ({ ...prev, description: event.target.value }))
@@ -66,7 +66,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
           <input
             type="number"
             min="0"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.preMinutes}
             onChange={(event) =>
               setRecipeDraft((prev) => ({
@@ -83,7 +83,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
           <input
             type="number"
             min="0"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.cookMinutes}
             onChange={(event) =>
               setRecipeDraft((prev) => ({
@@ -101,12 +101,12 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:shadow-black/20 dark:hover:bg-slate-100"
+          className="rounded-full bg-sky-900 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
         >
           {saving ? 'Saving...' : 'Save Recipe'}
         </button>
         {status && (
-          <span className="text-sm text-slate-500 dark:text-slate-400">
+          <span className="text-sm text-sky-500 dark:text-sky-400">
             {status}
           </span>
         )}

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 
 export default function AuthPanel() {
   return (
-    <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-black/5 dark:border-slate-800 dark:bg-slate-950/70 dark:shadow-black/20">
+    <div className="w-full max-w-md rounded-2xl border border-sky-200 bg-white/80 p-6 shadow-lg shadow-black/5 dark:border-sky-800 dark:bg-sky-950/70 dark:shadow-black/20">
       <Auth
         supabaseClient={supabase}
         appearance={{

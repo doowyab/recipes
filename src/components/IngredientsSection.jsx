@@ -280,13 +280,13 @@ export default function IngredientsSection({ recipeId }) {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-black/5 dark:border-slate-800 dark:bg-slate-950/70 dark:shadow-black/20">
+    <section className="rounded-2xl border border-sky-200 bg-white/80 p-6 shadow-lg shadow-black/5 dark:border-sky-800 dark:bg-sky-950/70 dark:shadow-black/20">
       <header className="mb-2">
         <h2 className="text-xl font-semibold">Ingredients</h2>
       </header>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-sky-500 dark:text-sky-400">
             {loading && 'Loading ingredients...'}
           </p>
         </div>
@@ -294,7 +294,7 @@ export default function IngredientsSection({ recipeId }) {
         {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
         {items.length === 0 && !loading ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400">
+          <div className="rounded-xl border border-dashed border-sky-200 bg-sky-50 p-6 text-center text-sm text-sky-500 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-400">
             No ingredients yet.
           </div>
         ) : null}
@@ -308,7 +308,7 @@ export default function IngredientsSection({ recipeId }) {
                   item.ingredients?.id ??
                   item.ingredients?.name
                 }
-                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                className="flex items-center justify-between gap-3 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-900/50 dark:text-sky-200"
               >
                 <span>
                   {(() => {
@@ -339,7 +339,7 @@ export default function IngredientsSection({ recipeId }) {
 
         {showForm ? (
           <div className="flex flex-col gap-3">
-            <hr className="my-4 border-slate-200 dark:border-slate-800" />
+            <hr className="my-4 border-sky-200 dark:border-sky-800" />
             {draftMode === null ? (
               <label className="form-label">
                 Ingredient name
@@ -348,7 +348,7 @@ export default function IngredientsSection({ recipeId }) {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="e.g. Smoked paprika"
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
+                  className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none transition focus:border-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100 dark:focus:border-sky-400"
                 />
               </label>
             ) : null}
@@ -360,7 +360,7 @@ export default function IngredientsSection({ recipeId }) {
                     type="button"
                     onClick={handleStartNewIngredient}
                     disabled={!normalizedQuery || hasExactMatch}
-                    className="w-full rounded-lg border border-dashed border-slate-300 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-slate-400 hover:text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-400 dark:hover:text-white dark:disabled:border-slate-800 dark:disabled:text-slate-500"
+                    className="w-full rounded-lg border border-dashed border-sky-300 px-3 py-2 text-left text-sm text-sky-700 transition hover:border-sky-400 hover:text-sky-900 disabled:cursor-not-allowed disabled:border-sky-200 disabled:text-sky-400 dark:border-sky-600 dark:text-sky-200 dark:hover:border-sky-400 dark:hover:text-white dark:disabled:border-sky-800 dark:disabled:text-sky-500"
                   >
                     Add new ingredient “{query.trim() || '…'}”
                   </button>
@@ -370,7 +370,7 @@ export default function IngredientsSection({ recipeId }) {
                       key={ingredient.id}
                       type="button"
                       onClick={() => handleSelectExisting(ingredient)}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-900"
+                      className="w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-left text-sm text-sky-700 transition hover:border-sky-400 hover:bg-sky-50 dark:border-sky-800 dark:bg-sky-950/70 dark:text-sky-200 dark:hover:border-sky-600 dark:hover:bg-sky-900"
                     >
                       Use existing: {ingredient.name}
                     </button>
@@ -379,8 +379,8 @@ export default function IngredientsSection({ recipeId }) {
               ) : null}
 
               {draftMode === 'new' || draftMode === 'existing' ? (
-                <div className="flex flex-col gap-3 text-center text-sm text-slate-700 dark:text-slate-200">
-                  <div className="text-base font-semibold text-slate-800 dark:text-slate-200">
+                <div className="flex flex-col gap-3 text-center text-sm text-sky-700 dark:text-sky-200">
+                  <div className="text-base font-semibold text-sky-800 dark:text-sky-200">
                     Adding {selectedIngredient?.name || query.trim() || 'ingredient'}
                   </div>
                 </div>
@@ -388,7 +388,7 @@ export default function IngredientsSection({ recipeId }) {
             </div>
 
             {draftMode === 'new' || draftMode === 'existing' ? (
-              <div className="flex flex-col gap-3 text-left text-sm text-slate-700 dark:text-slate-200">
+              <div className="flex flex-col gap-3 text-left text-sm text-sky-700 dark:text-sky-200">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="form-label">
                     Recipe Quantity
@@ -397,7 +397,7 @@ export default function IngredientsSection({ recipeId }) {
                       inputMode="decimal"
                       value={detailQuantity}
                       onChange={(event) => setDetailQuantity(event.target.value)}
-                      className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
+                      className="rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-sky-900 outline-none focus:border-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100 dark:focus:border-sky-400"
                     />
                     {detailErrors.quantity ? (
                       <span className="text-[11px] text-rose-500">
@@ -411,7 +411,7 @@ export default function IngredientsSection({ recipeId }) {
                     <select
                       value={detailUnit}
                       onChange={(event) => handleDetailUnitChange(event.target.value)}
-                      className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
+                      className="rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-sky-900 outline-none focus:border-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100 dark:focus:border-sky-400"
                     >
                       <option value="">Select unit</option>
                       <option value="count">count</option>
@@ -433,13 +433,13 @@ export default function IngredientsSection({ recipeId }) {
                     type="text"
                     value={detailNotes}
                     onChange={(event) => setDetailNotes(event.target.value)}
-                    className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
+                    className="rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-sky-900 outline-none focus:border-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100 dark:focus:border-sky-400"
                   />
                 </label>
 
                 {draftMode === 'new' ? (
                   <div className="mt-2 flex flex-col gap-3">
-                    <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300">
+                    <p className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-600 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
                       These optional settings apply to the ingredient itself (not
                       just this recipe) and will affect every recipe that uses it.
                     </p>
@@ -449,7 +449,7 @@ export default function IngredientsSection({ recipeId }) {
                         <select
                           value={newUnit}
                           onChange={(event) => setNewUnit(event.target.value)}
-                          className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
+                          className="rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-sky-900 outline-none focus:border-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100 dark:focus:border-sky-400"
                         >
                           <option value="">Select unit</option>
                           <option value="count">count</option>
@@ -462,12 +462,12 @@ export default function IngredientsSection({ recipeId }) {
 
                       <label className="form-label">
                         Fresh (synergy core)
-                        <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        <div className="flex items-center gap-2 rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100">
                           <input
                             type="checkbox"
                             checked={newIsFresh}
                             onChange={(event) => setNewIsFresh(event.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/20 dark:border-slate-600 dark:bg-slate-950 dark:text-white dark:focus:ring-white/30"
+                            className="h-4 w-4 rounded border-sky-300 text-sky-900 focus:ring-sky-900/20 dark:border-sky-600 dark:bg-sky-950 dark:text-white dark:focus:ring-white/30"
                           />
                           <span>{newIsFresh ? 'Yes' : 'No'}</span>
                         </div>
@@ -486,7 +486,7 @@ export default function IngredientsSection({ recipeId }) {
                       handleCreateIngredient()
                     }
                   }}
-                  className="mt-3 w-full rounded-lg border border-slate-300 bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:border-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  className="mt-3 w-full rounded-lg border border-sky-300 bg-sky-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 dark:border-sky-700 dark:bg-white dark:text-sky-900 dark:hover:bg-sky-100"
                 >
                   {draftMode === 'new' ? 'Add New Ingredient' : 'Add Ingredient'}
                 </button>
@@ -494,8 +494,8 @@ export default function IngredientsSection({ recipeId }) {
             ) : null}
 
             {searching ? (
-              <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                <span className="h-3 w-3 animate-spin rounded-full border border-slate-300 border-t-slate-900 dark:border-slate-600 dark:border-t-slate-300" />
+              <div className="mt-3 flex items-center gap-2 text-xs text-sky-500 dark:text-sky-400">
+                <span className="h-3 w-3 animate-spin rounded-full border border-sky-300 border-t-sky-900 dark:border-sky-600 dark:border-t-sky-300" />
                 Searching ingredients…
               </div>
             ) : null}
@@ -508,7 +508,7 @@ export default function IngredientsSection({ recipeId }) {
 
         <button
           type="button"
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white"
+          className="w-full rounded-xl border border-sky-300 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
           onClick={() => {
             if (showForm) {
               resetDraftState()

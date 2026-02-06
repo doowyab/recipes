@@ -38,13 +38,13 @@ function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <header className="border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/70 dark:bg-slate-950/80">
+    <div className="min-h-screen bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100">
+      <header className="border-b border-sky-200/70 bg-white/80 backdrop-blur dark:border-sky-800/70 dark:bg-sky-950/80">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link className="text-lg font-semibold tracking-tight" to="/">
             Recipes
           </Link>
-          <nav className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-300">
+          <nav className="flex items-center gap-6 text-sm text-sky-600 dark:text-sky-300">
             <Link className="transition hover:text-white" to="/">
               Home
             </Link>
@@ -55,7 +55,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => supabase.auth.signOut()}
-                className="text-sm font-semibold text-slate-700 transition hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+                className="text-sm font-semibold text-sky-700 transition hover:text-sky-900 dark:text-sky-200 dark:hover:text-white"
               >
                 Sign out
               </button>
@@ -71,8 +71,8 @@ function App() {
       <main className="mx-auto w-full max-w-5xl px-6 py-12">
         {authLoading ? (
           <div className="flex min-h-[40vh] items-center justify-center">
-            <div className="flex flex-col items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900 dark:border-slate-700 dark:border-t-slate-200" />
+            <div className="flex flex-col items-center gap-3 text-sm text-sky-500 dark:text-sky-400">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-sky-300 border-t-sky-900 dark:border-sky-700 dark:border-t-sky-200" />
               Checking session…
             </div>
           </div>

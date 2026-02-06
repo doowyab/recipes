@@ -59,23 +59,23 @@ export default function Login() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
       <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+        <p className="text-xs uppercase tracking-[0.3em] text-sky-500 dark:text-sky-400">
           Account
         </p>
         <h1 className="text-3xl font-semibold sm:text-4xl">
           Friends & Family Access
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-sky-600 dark:text-sky-300">
           This app is shared with friends and family only. Want access to build
           your own lists?{' '}
-          <Link className="text-slate-900 underline dark:text-white" to="/contact">
+          <Link className="text-sky-900 underline dark:text-white" to="/contact">
             Reach out
           </Link>{' '}
           and we&apos;ll help.
         </p>
       </div>
 
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/80 p-6 text-left shadow-lg shadow-black/5 dark:border-slate-800 dark:bg-slate-950/70 dark:shadow-black/20">
+      <div className="w-full max-w-md rounded-2xl border border-sky-200 bg-white/80 p-6 text-left shadow-lg shadow-black/5 dark:border-sky-800 dark:bg-sky-950/70 dark:shadow-black/20">
         {message ? (
           <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-100">
             <p className="font-medium">{message}</p>
@@ -103,18 +103,18 @@ export default function Login() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+              className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sky-900 placeholder:text-sky-400 focus:border-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-white dark:text-slate-900 dark:shadow-black/20 dark:hover:bg-slate-100"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-900 px-6 py-3 font-semibold text-white shadow-lg shadow-black/10 transition hover:-transky-y-0.5 hover:bg-sky-800 disabled:transky-y-0 disabled:cursor-not-allowed disabled:bg-sky-300 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
           >
             {loading ? (
               <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200/40 border-t-slate-200 dark:border-slate-900/40 dark:border-t-slate-900" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200/40 border-t-sky-200 dark:border-sky-900/40 dark:border-t-sky-900" />
                 Sending...
               </>
             ) : (
@@ -123,7 +123,7 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="mt-5 text-center text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-5 text-center text-xs text-sky-500 dark:text-sky-400">
           No password required. We&apos;ll email you a secure sign-in link.
         </p>
       </div>
