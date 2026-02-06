@@ -17,6 +17,7 @@ recipe_id uuid FK -> recipes.id
 created_at timestamptz
 position int2
 instruction text
+is_heading bool
 
 ## ingredients
 id uuid PK

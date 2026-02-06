@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import IngredientsSection from '../components/IngredientsSection'
 import RecipeBasicsPanel from '../components/RecipeBasicsPanel'
+import RecipeStepsSection from '../components/RecipeStepsSection'
 import { supabase } from '../lib/supabase'
 
 function toIntOrNull(value) {
@@ -62,6 +63,7 @@ export default function RecipeEdit() {
     }
   }, [recipeId])
 
+
   async function handleSaveBasics() {
     setSaving(true)
     setStatus('')
@@ -95,6 +97,7 @@ export default function RecipeEdit() {
     }
   }
 
+
   return (
     <div className="flex w-full flex-col gap-8 text-left">
       <RecipeBasicsPanel
@@ -106,21 +109,7 @@ export default function RecipeEdit() {
         status={status}
       />
       <IngredientsSection recipeId={recipeId} />
-
-      <section className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-black/5 dark:border-slate-800 dark:bg-slate-950/70 dark:shadow-black/20">
-        <header className="mb-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
-            Steps
-          </p>
-          <h2 className="text-xl font-semibold">Steps</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Add cooking steps here. This section is coming next.
-          </p>
-        </header>
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400">
-          Step list placeholder.
-        </div>
-      </section>
+      <RecipeStepsSection recipeId={recipeId} />
     </div>
   )
 }

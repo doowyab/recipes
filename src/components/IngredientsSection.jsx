@@ -199,6 +199,24 @@ export default function IngredientsSection({ recipeId }) {
     await loadIngredients()
   }
 
+  async function removeIngredientFromRecipe(ingredientId) {
+    if (!recipeId || !ingredientId) return
+    setActionStatus('')
+
+    const { error: deleteError } = await supabase
+      .from('recipe_ingredients')
+      .delete()
+      .eq('recipe_id', recipeId)
+      .eq('ingredient_id', ingredientId)
+
+    if (deleteError) {
+      setActionStatus(deleteError.message ?? 'Unable to remove ingredient.')
+      return
+    }
+
+    await loadIngredients()
+  }
+
   async function handleCreateIngredient() {
     if (!normalizedQuery) return
     setActionStatus('')
@@ -225,7 +243,7 @@ export default function IngredientsSection({ recipeId }) {
     setActionStatus('')
     setDraftMode('existing')
     setSelectedIngredient(ingredient)
-    setDetailUnit(ingredient.default_unit || 'units')
+    setDetailUnit(ingredient.default_unit || 'count')
     setDetailErrors({})
   }
 
@@ -238,8 +256,15 @@ export default function IngredientsSection({ recipeId }) {
   }
 
   function handleContinueToDetails() {
-    setDetailUnit(newUnit || 'units')
+    setDetailUnit(newUnit || 'count')
     setDetailErrors({})
+  }
+
+  function handleDetailUnitChange(nextValue) {
+    setDetailUnit(nextValue)
+    if (draftMode === 'new') {
+      setNewUnit(nextValue)
+    }
   }
 
   function validateDetails() {
@@ -283,12 +308,30 @@ export default function IngredientsSection({ recipeId }) {
                   item.ingredients?.id ??
                   item.ingredients?.name
                 }
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
               >
-                <span>{item.ingredients?.name ?? 'Unnamed ingredient'}</span>
-                <span className="text-xs text-slate-500 dark:text-slate-500">
-                  {item.unit || item.ingredients?.default_unit || 'unit'}
+                <span>
+                  {(() => {
+                    const name = item.ingredients?.name ?? 'Unnamed ingredient'
+                    if (item.quantity === null || item.quantity === undefined) {
+                      return name
+                    }
+                    const unit = item.unit || item.ingredients?.default_unit
+                    const normalizedUnit = unit?.toLowerCase().trim()
+                    const showUnit = normalizedUnit && normalizedUnit !== 'count'
+                    const prefix = [item.quantity, showUnit ? unit : null]
+                      .filter(Boolean)
+                      .join(' ')
+                    return `${prefix} • ${name}`
+                  })()}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => removeIngredientFromRecipe(item.ingredient_id)}
+                  className="rounded-md border border-rose-200 px-2 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-rose-600 transition hover:border-rose-300 hover:text-rose-700 dark:border-rose-900/60 dark:text-rose-300 dark:hover:border-rose-700 dark:hover:text-rose-200"
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
@@ -296,8 +339,8 @@ export default function IngredientsSection({ recipeId }) {
 
         {showForm ? (
           <div className="flex flex-col gap-3">
-            <hr className="border-slate-200 dark:border-slate-800" />
-            {draftMode !== 'new' ? (
+            <hr className="my-4 border-slate-200 dark:border-slate-800" />
+            {draftMode === null ? (
               <label className="form-label">
                 Ingredient name
                 <input
@@ -335,10 +378,10 @@ export default function IngredientsSection({ recipeId }) {
                 </>
               ) : null}
 
-              {draftMode === 'new' ? (
-                <div className="flex flex-col gap-3 text-left text-sm text-slate-700 dark:text-slate-200">
-                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    Adding {query.trim() || 'ingredient'} to recipe
+              {draftMode === 'new' || draftMode === 'existing' ? (
+                <div className="flex flex-col gap-3 text-center text-sm text-slate-700 dark:text-slate-200">
+                  <div className="text-base font-semibold text-slate-800 dark:text-slate-200">
+                    Adding {selectedIngredient?.name || query.trim() || 'ingredient'}
                   </div>
                 </div>
               ) : null}
@@ -367,15 +410,15 @@ export default function IngredientsSection({ recipeId }) {
                     Recipe Unit
                     <select
                       value={detailUnit}
-                      onChange={(event) => setDetailUnit(event.target.value)}
+                      onChange={(event) => handleDetailUnitChange(event.target.value)}
                       className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
                     >
                       <option value="">Select unit</option>
-                      <option value="units">Units</option>
-                      <option value="grams">Grams</option>
-                      <option value="tsps">Tsps</option>
-                      <option value="tbsp">Tbsp</option>
-                      <option value="cups">Cups</option>
+                      <option value="count">count</option>
+                      <option value="g">g</option>
+                      <option value="tsp">tsp</option>
+                      <option value="tbsp">tbsp</option>
+                      <option value="cup">cup</option>
                     </select>
                     {detailErrors.unit ? (
                       <span className="text-[11px] text-rose-500">
@@ -385,7 +428,7 @@ export default function IngredientsSection({ recipeId }) {
                   </label>
                 </div>
                 <label className="form-label">
-                  Notes
+                  Recipe Ingredient Notes
                   <input
                     type="text"
                     value={detailNotes}
@@ -409,11 +452,11 @@ export default function IngredientsSection({ recipeId }) {
                           className="rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
                         >
                           <option value="">Select unit</option>
-                          <option value="units">Units</option>
-                          <option value="grams">Grams</option>
-                          <option value="tsps">Tsps</option>
-                          <option value="tbsp">Tbsp</option>
-                          <option value="cups">Cups</option>
+                          <option value="count">count</option>
+                          <option value="g">g</option>
+                          <option value="tsp">tsp</option>
+                          <option value="tbsp">tbsp</option>
+                          <option value="cup">cup</option>
                         </select>
                       </label>
 

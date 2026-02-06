@@ -73,7 +73,7 @@ export default function RecipeBasicsPanel({
           <label className="form-label">
             <span>Title</span>
             <input
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+              className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 dark:border-blue-900/60 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-300 dark:focus:ring-blue-400/30"
               value={recipeDraft.title}
               onChange={(event) =>
                 setRecipeDraft((prev) => ({
