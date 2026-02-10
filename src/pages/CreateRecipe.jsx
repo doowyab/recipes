@@ -26,7 +26,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
         <label className="form-label">
           <span>Title</span>
           <input
-            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.title}
             onChange={(event) =>
               setRecipeDraft((prev) => ({ ...prev, title: event.target.value }))
@@ -41,7 +41,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
             type="number"
             min="0"
             step="1"
-            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.servings}
             onChange={(event) =>
               setRecipeDraft((prev) => ({ ...prev, servings: event.target.value }))
@@ -53,7 +53,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
         <label className="form-label md:col-span-2">
           <span>Description</span>
           <textarea
-            className="min-h-[120px] rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="min-h-[120px] rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.description}
             onChange={(event) =>
               setRecipeDraft((prev) => ({ ...prev, description: event.target.value }))
@@ -67,7 +67,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
           <input
             type="number"
             min="0"
-            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.preMinutes}
             onChange={(event) =>
               setRecipeDraft((prev) => ({
@@ -84,7 +84,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
           <input
             type="number"
             min="0"
-            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-sky-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
             value={recipeDraft.cookMinutes}
             onChange={(event) =>
               setRecipeDraft((prev) => ({

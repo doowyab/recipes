@@ -43,7 +43,7 @@ function App() {
       <header className="border-b border-sky-200/70 bg-white/80 backdrop-blur dark:border-sky-800/70 dark:bg-sky-950/80">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link className="text-lg font-semibold tracking-tight" to="/">
-            Recipes
+            🍳 Recipes
           </Link>
           <nav className="flex items-center gap-6 text-sm text-sky-600 dark:text-sky-300">
             <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/">
