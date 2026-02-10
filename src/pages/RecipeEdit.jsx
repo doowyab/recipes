@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import IngredientsSection from '../components/IngredientsSection'
 import RecipeBasicsPanel from '../components/RecipeBasicsPanel'
 import RecipeStepsSection from '../components/RecipeStepsSection'
@@ -99,6 +100,14 @@ export default function RecipeEdit() {
 
 
   return (
+    <>
+      <Helmet>
+        <title>
+          {recipeDraft.title?.trim()
+            ? `${recipeDraft.title.trim()} · Edit · Recipes`
+            : 'Edit Recipe · Recipes'}
+        </title>
+      </Helmet>
     <div className="flex w-full flex-col gap-8 text-left">
       <RecipeBasicsPanel
         recipeDraft={recipeDraft}
@@ -111,5 +120,6 @@ export default function RecipeEdit() {
       <IngredientsSection recipeId={recipeId} />
       <RecipeStepsSection recipeId={recipeId} />
     </div>
+    </>
   )
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { supabase } from '../lib/supabase'
 
 function toIntOrNull(value) {
@@ -171,6 +172,10 @@ export default function CreateRecipe() {
   }
 
   return (
+    <>
+      <Helmet>
+        <title>Create Recipe · Recipes</title>
+      </Helmet>
     <div className="flex w-full flex-col gap-10 text-left">
       <RecipeBasicsForm
         recipeDraft={recipeDraft}
@@ -180,5 +185,6 @@ export default function CreateRecipe() {
         status={status}
       />
     </div>
+    </>
   )
 }

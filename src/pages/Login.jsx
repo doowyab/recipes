@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -57,6 +58,10 @@ export default function Login() {
   }
 
   return (
+    <>
+      <Helmet>
+        <title>Sign In · Recipes</title>
+      </Helmet>
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
       <div>
         <p className="text-xs uppercase tracking-[0.3em] text-sky-500 dark:text-sky-400">
@@ -128,5 +133,6 @@ export default function Login() {
         </p>
       </div>
     </div>
+    </>
   )
 }

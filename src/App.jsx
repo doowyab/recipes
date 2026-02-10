@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate, Route, Routes } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import CreateRecipe from './pages/CreateRecipe'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -10,6 +10,7 @@ import RecipeView from './pages/RecipeView.jsx'
 function App() {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const location = useLocation()
 
   useEffect(() => {
     let isMounted = true
@@ -45,10 +46,10 @@ function App() {
             Recipes
           </Link>
           <nav className="flex items-center gap-6 text-sm text-sky-600 dark:text-sky-300">
-            <Link className="transition hover:text-white" to="/">
+            <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/">
               Home
             </Link>
-            <Link className="transition hover:text-white" to="/create">
+            <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/create">
               Create
             </Link>
             {user ? (
@@ -60,7 +61,7 @@ function App() {
                 Sign out
               </button>
             ) : (
-              <Link className="transition hover:text-white" to="/login">
+              <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/login">
                 Sign in
               </Link>
             )}
@@ -68,7 +69,7 @@ function App() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl px-6 py-12">
+      <main className="mx-auto w-full max-w-5xl px-6 pt-6 pb-10">
         {authLoading ? (
           <div className="flex min-h-[40vh] items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-sm text-sky-500 dark:text-sky-400">
@@ -76,28 +77,16 @@ function App() {
               Checking session…
             </div>
           </div>
+        ) : !user && location.pathname !== '/login' ? (
+          <Navigate to="/login" replace />
         ) : (
-        <Routes>
-          <Route
-            path="/"
-            element={<Home />}
-          />
-          <Route
-            path="/create"
-            element={user ? <CreateRecipe /> : <Navigate to="/login" replace />}
-          />
-          <Route
-            path="/recipe/:recipeId/edit"
-            element={user ? <RecipeEdit /> : <Navigate to="/login" replace />}
-          />
-          <Route path="/recipe/:recipeId/view" element={<RecipeView />} />
-          <Route
-            path="/login"
-            element={
-              <Login />
-            }
-          />
-        </Routes>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/create" element={<CreateRecipe />} />
+            <Route path="/recipe/:recipeId/edit" element={<RecipeEdit />} />
+            <Route path="/recipe/:recipeId/view" element={<RecipeView />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
         )}
       </main>
     </div>
