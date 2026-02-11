@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
+import RecipeFilterControls from '../components/RecipeFilterControls'
 import { supabase } from '../lib/supabase'
 
 function formatQuantity(quantity, unit, defaultUnit) {
@@ -24,6 +25,8 @@ export default function Plan() {
   const [error, setError] = useState('')
   const [addingId, setAddingId] = useState('')
   const [removingId, setRemovingId] = useState('')
+  const [addOtherSortBy, setAddOtherSortBy] = useState('alphabetical')
+  const [addOtherSelectedIngredients, setAddOtherSelectedIngredients] = useState([])
 
   const computeSynergy = (planned, all) => {
     const plannedSet = new Set(planned.map((recipe) => recipe.id))
@@ -140,7 +143,7 @@ export default function Plan() {
         const { data: plannedRows, error: plannedError } = await supabase
           .from('recipes')
           .select(
-            'id, title, description, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
+            'id, title, description, cook_minutes, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
           )
           .in('id', recipeIds)
           .order('title')
@@ -169,6 +172,7 @@ export default function Plan() {
             id: recipe.id,
             title: recipe.title || 'Untitled recipe',
             description: recipe.description,
+            cookMinutes: recipe.cook_minutes,
             ingredients,
           }
         })
@@ -182,7 +186,7 @@ export default function Plan() {
       const { data: allRows, error: allError } = await supabase
         .from('recipes')
         .select(
-          'id, title, description, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
+          'id, title, description, cook_minutes, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
         )
         .order('title')
 
@@ -210,6 +214,7 @@ export default function Plan() {
           id: recipe.id,
           title: recipe.title || 'Untitled recipe',
           description: recipe.description,
+          cookMinutes: recipe.cook_minutes,
           ingredients,
         }
       })
@@ -284,6 +289,29 @@ export default function Plan() {
     })
   }
 
+  const addableRecipes = useMemo(
+    () => allRecipes.filter((recipe) => !planRecipeIds.has(recipe.id)),
+    [allRecipes, planRecipeIds]
+  )
+
+  const filteredAddableRecipes = useMemo(() => {
+    const ingredientFiltered = addOtherSelectedIngredients.length > 0
+      ? addableRecipes.filter((recipe) =>
+          recipe.ingredients.some((ingredient) => addOtherSelectedIngredients.includes(ingredient.name))
+        )
+      : addableRecipes
+
+    return [...ingredientFiltered].sort((a, b) => {
+      if (addOtherSortBy === 'cook-time') {
+        const aCook = a.cookMinutes ?? Number.POSITIVE_INFINITY
+        const bCook = b.cookMinutes ?? Number.POSITIVE_INFINITY
+        if (aCook !== bCook) return aCook - bCook
+      }
+
+      return a.title.localeCompare(b.title)
+    })
+  }, [addOtherSelectedIngredients, addOtherSortBy, addableRecipes])
+
   return (
     <>
       <Helmet>
@@ -310,9 +338,9 @@ export default function Plan() {
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex flex-col gap-2">
-                <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
+                <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
                   Planned recipes
-                </h2>
+                </h1>
                 <p className="text-sm text-sky-600 dark:text-sky-300">
                   Planned recipes help you create a{' '}
                   <Link className="font-semibold text-sky-900 underline dark:text-white" to="/shop">
@@ -396,7 +424,7 @@ export default function Plan() {
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   to="/shop"
-                  className="rounded-full border border-sky-200 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+                  className="rounded-full bg-sky-900 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
                 >
                   View shopping list
                 </Link>
@@ -498,15 +526,21 @@ export default function Plan() {
               <p className="mt-2 text-sm text-sky-600 dark:text-sky-300">
                 Review each recipe and add it to the plan.
               </p>
-              {allRecipes.filter((recipe) => !planRecipeIds.has(recipe.id)).length === 0 ? (
+              <RecipeFilterControls
+                className="mt-4"
+                sortBy={addOtherSortBy}
+                onSortByChange={setAddOtherSortBy}
+                selectedIngredients={addOtherSelectedIngredients}
+                onSelectedIngredientsChange={setAddOtherSelectedIngredients}
+                recipes={addableRecipes}
+              />
+              {filteredAddableRecipes.length === 0 ? (
                 <p className="mt-4 text-sm text-sky-500 dark:text-sky-400">
-                  No recipes available to add.
+                  No recipes available for this filter.
                 </p>
               ) : (
                 <div className="mt-4 flex flex-col gap-4">
-                  {allRecipes
-                    .filter((recipe) => !planRecipeIds.has(recipe.id))
-                    .map((recipe) => {
+                  {filteredAddableRecipes.map((recipe) => {
                     return (
                       <div
                         key={`add-${recipe.id}`}
@@ -517,6 +551,22 @@ export default function Plan() {
                             <h3 className="text-base font-semibold text-sky-900 dark:text-sky-100">
                               {recipe.title}
                             </h3>
+                            {addOtherSelectedIngredients.length > 0 ? (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {recipe.ingredients
+                                  .filter((ingredient) =>
+                                    addOtherSelectedIngredients.includes(ingredient.name)
+                                  )
+                                  .map((ingredient) => (
+                                    <span
+                                      key={`${recipe.id}-filter-${ingredient.id}`}
+                                      className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-900/40 dark:text-emerald-200"
+                                    >
+                                      {ingredient.name}
+                                    </span>
+                                  ))}
+                              </div>
+                            ) : null}
                           </div>
                           <button
                             type="button"

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import RecipeFilterControls from '../components/RecipeFilterControls'
 import { supabase } from '../lib/supabase'
 
 function formatMinutes(value) {
@@ -16,6 +17,8 @@ export default function Recipes() {
   const [pendingDeleteRecipe, setPendingDeleteRecipe] = useState(null)
   const [deletingId, setDeletingId] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [sortBy, setSortBy] = useState('alphabetical')
+  const [selectedIngredients, setSelectedIngredients] = useState([])
 
   useEffect(() => {
     let isMounted = true
@@ -26,7 +29,9 @@ export default function Recipes() {
 
       const { data, error: fetchError } = await supabase
         .from('recipes')
-        .select('id, title, description, pre_minutes, cook_minutes, servings')
+        .select(
+          'id, title, description, pre_minutes, cook_minutes, servings, recipe_ingredients ( ingredients ( id, name ) )'
+        )
 
       if (!isMounted) return
 
@@ -34,7 +39,16 @@ export default function Recipes() {
         setError(fetchError.message ?? 'Unable to load recipes.')
         setRecipes([])
       } else {
-        setRecipes(data ?? [])
+        const normalized = (data ?? []).map((recipe) => ({
+          ...recipe,
+          ingredients: (recipe.recipe_ingredients ?? [])
+            .map((entry) => ({
+              id: entry.ingredients?.id ?? '',
+              name: entry.ingredients?.name ?? '',
+            }))
+            .filter((ingredient) => ingredient.name),
+        }))
+        setRecipes(normalized)
       }
 
       setLoading(false)
@@ -88,27 +102,59 @@ export default function Recipes() {
     setDeleteError('')
   }
 
+  const filteredRecipes = useMemo(() => {
+    const ingredientFiltered = selectedIngredients.length > 0
+      ? recipes.filter((recipe) =>
+          recipe.ingredients?.some((ingredient) => selectedIngredients.includes(ingredient.name))
+        )
+      : recipes
+
+    const sorted = [...ingredientFiltered].sort((a, b) => {
+      if (sortBy === 'cook-time') {
+        const aCook = a.cook_minutes ?? Number.POSITIVE_INFINITY
+        const bCook = b.cook_minutes ?? Number.POSITIVE_INFINITY
+        if (aCook !== bCook) return aCook - bCook
+      }
+
+      return (a.title || 'Untitled Recipe').localeCompare(b.title || 'Untitled Recipe')
+    })
+
+    return sorted
+  }, [recipes, selectedIngredients, sortBy])
+
   return (
     <>
       <Helmet>
         <title>Recipes - Recipes</title>
       </Helmet>
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">All Recipes</h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">All Recipes</h1>
+          <p className="mt-2 text-sm text-sky-600 dark:text-sky-300">
+            Recipes are shared with all users.
+          </p>
+        </div>
+        <RecipeFilterControls
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          selectedIngredients={selectedIngredients}
+          onSelectedIngredientsChange={setSelectedIngredients}
+          recipes={recipes}
+        />
         {loading ? (
           <p className="text-sm text-sky-500 dark:text-sky-400">Loading recipes...</p>
         ) : error ? (
           <p className="text-sm text-rose-300">{error}</p>
-        ) : recipes.length === 0 ? (
+        ) : filteredRecipes.length === 0 ? (
           <div className="flex flex-col gap-3 rounded-xl border border-dashed border-sky-200 bg-sky-50 p-6 text-center dark:border-sky-800 dark:bg-sky-900/50">
-            <p className="text-sm text-sky-600 dark:text-sky-300">No recipes yet.</p>
+            <p className="text-sm text-sky-600 dark:text-sky-300">No recipes match this filter.</p>
             <p className="text-xs text-sky-500 dark:text-sky-500">
-              Create your first recipe to see it listed here.
+              Try another ingredient filter or add a new recipe.
             </p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-3">
-            {recipes.map((recipe) => {
+            {filteredRecipes.map((recipe) => {
               const badges = [
                 {
                   label: 'Prep',
@@ -142,6 +188,20 @@ export default function Recipes() {
                       <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
                         {recipe.title || 'Untitled Recipe'}
                       </h3>
+                      {selectedIngredients.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {recipe.ingredients
+                            .filter((ingredient) => selectedIngredients.includes(ingredient.name))
+                            .map((ingredient) => (
+                              <span
+                                key={`${recipe.id}-filter-${ingredient.id || ingredient.name}`}
+                                className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-900/40 dark:text-emerald-200"
+                              >
+                                {ingredient.name}
+                              </span>
+                            ))}
+                        </div>
+                      ) : null}
                       {recipe.description ? (
                         <p className="mt-1 text-sm text-sky-500 dark:text-sky-400">
                           {recipe.description}
