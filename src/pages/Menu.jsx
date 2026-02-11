@@ -179,15 +179,16 @@ export default function Menu() {
         ) : (
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
-              <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
+              <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
                 Menu at {household?.name || 'your home'}
-              </h2>
+              </h1>
               <p className="text-sm text-sky-600 dark:text-sky-300">
-                These are the recipes you picked and planned for. You can mark them off as you cook them, and{' '}
+                These are the recipes you picked and planned for. You can mark them off as you cook them, or
+                plan your next batch of meals{' '}
                 <Link className="font-semibold text-sky-900 underline dark:text-white" to="/plan">
-                  plan
-                </Link>{' '}
-                the next batch of meals.
+                  here
+                </Link>
+                .
               </p>
             </div>
             {recipes.map((recipe) => (

@@ -11,14 +11,13 @@ function toIntOrNull(value) {
 
 function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status }) {
   return (
-    <section className="rounded-2xl border border-sky-200 bg-white/80 p-6 shadow-lg shadow-black/5 backdrop-blur dark:border-sky-800 dark:bg-sky-950/70 dark:shadow-black/20">
+    <section className="p-0">
       <header className="mb-6">
-        <p className="text-xs uppercase tracking-[0.3em] text-sky-500 dark:text-sky-400">
-          Step 1
-        </p>
-        <h2 className="text-2xl font-semibold">Recipe Basics</h2>
-        <p className="text-sm text-sky-600 dark:text-sky-300">
-          Capture the core details to create your recipe.
+        <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
+          New Recipe
+        </h1>
+        <p className="mt-2 text-sm text-sky-600 dark:text-sky-300">
+          Add the basics now, then build out ingredients and steps next.
         </p>
       </header>
 
@@ -104,7 +103,7 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
           disabled={saving}
           className="rounded-full bg-sky-900 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
         >
-          {saving ? 'Saving...' : 'Save Recipe'}
+          {saving ? 'Saving...' : 'Create Recipe'}
         </button>
         {status && (
           <span className="text-sm text-sky-500 dark:text-sky-400">

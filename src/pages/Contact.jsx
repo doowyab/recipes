@@ -35,7 +35,7 @@ export default function Contact() {
         <title>Contact - Recipes</title>
       </Helmet>
       <div>
-        <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100 md:text-3xl">Contact</h1>
+        <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">Contact</h1>
         {isLoggedIn ? (
           <p className="mt-4 text-sm text-sky-600 dark:text-sky-300 md:text-base">
             If you have any questions or find any issues let me know at{' '}

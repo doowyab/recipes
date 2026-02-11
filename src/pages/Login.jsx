@@ -67,7 +67,7 @@ export default function Login() {
         <p className="text-xs uppercase tracking-[0.3em] text-sky-500 dark:text-sky-400">
           Account
         </p>
-        <h1 className="text-3xl font-semibold sm:text-4xl">
+        <h1 className="text-2xl font-semibold">
           Friends & Family Access
         </h1>
         <p className="text-sm text-sky-600 dark:text-sky-300">

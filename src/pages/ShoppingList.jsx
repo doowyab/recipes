@@ -367,9 +367,9 @@ export default function ShoppingList() {
           <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex flex-col gap-2">
-                  <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
+                  <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
                     Shopping List
-                  </h2>
+                  </h1>
                   <p className="text-sm text-sky-600 dark:text-sky-300">
                     To change recipes on this list, update your{' '}
                     <Link className="font-semibold text-sky-900 underline dark:text-white" to="/plan">

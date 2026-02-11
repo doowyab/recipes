@@ -187,7 +187,7 @@ export default function RecipeView() {
         <div className="md:col-span-2">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl font-semibold sm:text-4xl">
+              <h1 className="text-2xl font-semibold">
                 {recipe?.title || 'Recipe Details'}
               </h1>
               {hasDescription ? (

@@ -205,6 +205,7 @@ export default function Households() {
         <title>Household - Recipes</title>
       </Helmet>
       <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">Your Household</h1>
         {loading ? (
           <p className="text-sm text-sky-500 dark:text-sky-400">
             Loading households...

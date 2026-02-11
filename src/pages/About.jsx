@@ -8,7 +8,7 @@ export default function About() {
       </Helmet>
       <div className="flex flex-col gap-10">
         <section>
-          <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100 md:text-3xl">About</h1>
+          <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">About</h1>
           <p className="mt-4 text-sm text-sky-600 dark:text-sky-300 md:text-base">
             This site was created as a personal project, to help speed up the process of weekly
             meal planning. No subscriptions, no adverts, no SEO.

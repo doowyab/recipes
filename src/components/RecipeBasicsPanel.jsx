@@ -168,7 +168,7 @@ export default function RecipeBasicsPanel({
         <div className="flex flex-col gap-4">
           <div>
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100 sm:text-3xl">
+              <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
                 {formatValue(recipeDraft.title, 'Untitled Recipe')}
               </h1>
               <button
