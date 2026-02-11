@@ -3,8 +3,12 @@ import { useMemo } from 'react'
 export default function RecipeFilterControls({
   sortBy,
   onSortByChange,
+  sortDirection,
+  onSortDirectionChange,
   selectedIngredients,
   onSelectedIngredientsChange,
+  selectedServings,
+  onSelectedServingsChange,
   recipes,
   className = '',
 }) {
@@ -25,6 +29,17 @@ export default function RecipeFilterControls({
     () => new Set(selectedIngredients ?? []),
     [selectedIngredients]
   )
+  const servingsOptions = useMemo(() => {
+    const values = new Set()
+
+    ;(recipes ?? []).forEach((recipe) => {
+      const servings = recipe?.servings
+      if (servings === null || servings === undefined || servings === '') return
+      values.add(servings)
+    })
+
+    return Array.from(values).sort((a, b) => a - b)
+  }, [recipes])
 
   const handleToggleIngredient = (name) => {
     const next = selectedSet.has(name)
@@ -45,6 +60,35 @@ export default function RecipeFilterControls({
         >
           <option value="alphabetical">Alphabetical</option>
           <option value="cook-time">Cook time</option>
+          <option value="heat-level">Heat level</option>
+        </select>
+      </label>
+
+      <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
+        Direction
+        <select
+          value={sortDirection}
+          onChange={(event) => onSortDirectionChange(event.target.value)}
+          className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-sky-900 outline-none focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:focus:border-white dark:focus:ring-white/40"
+        >
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </label>
+
+      <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
+        Serves
+        <select
+          value={selectedServings}
+          onChange={(event) => onSelectedServingsChange(event.target.value)}
+          className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-sky-900 outline-none focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:focus:border-white dark:focus:ring-white/40"
+        >
+          <option value="">Any</option>
+          {servingsOptions.map((servings) => (
+            <option key={servings} value={String(servings)}>
+              {servings}
+            </option>
+          ))}
         </select>
       </label>
 

@@ -3,12 +3,22 @@ import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const SUPERMARKET_SECTIONS = [
+  'Fruit & Vegtables',
+  'Fridge',
+  'Bakery',
+  'Cupboard',
+  'Snacks and Sweets',
+  'Alcohol',
+  'Freezer',
+]
+
 async function fetchIngredientsWithUsage() {
   const [{ data: ingredientRows, error: ingredientError }, { data: usageRows, error: usageError }] =
     await Promise.all([
       supabase
         .from('ingredients')
-        .select('id, name, is_synergy_core, default_unit')
+        .select('id, name, is_synergy_core, default_unit, default_quantity, supermarket_section')
         .order('name', { ascending: true }),
       supabase.from('recipe_ingredients').select('ingredient_id'),
     ])
@@ -44,6 +54,8 @@ export default function Ingredients() {
   const [editingIngredient, setEditingIngredient] = useState(null)
   const [editName, setEditName] = useState('')
   const [editDefaultUnit, setEditDefaultUnit] = useState('')
+  const [editDefaultQuantity, setEditDefaultQuantity] = useState('')
+  const [editSupermarketSection, setEditSupermarketSection] = useState('')
   const [editIsSynergyCore, setEditIsSynergyCore] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -95,6 +107,8 @@ export default function Ingredients() {
     setEditingIngredient(ingredient)
     setEditName(ingredient.name || '')
     setEditDefaultUnit(ingredient.default_unit || '')
+    setEditDefaultQuantity(ingredient.default_quantity ?? '')
+    setEditSupermarketSection(ingredient.supermarket_section || '')
     setEditIsSynergyCore(Boolean(ingredient.is_synergy_core))
     setSaveError('')
   }
@@ -122,9 +136,23 @@ export default function Ingredients() {
 
     const trimmedName = editName.trim()
     const trimmedDefaultUnit = editDefaultUnit.trim()
+    const hasDefaultQuantity = String(editDefaultQuantity ?? '').trim() !== ''
+    const parsedDefaultQuantity = hasDefaultQuantity
+      ? Number.parseInt(editDefaultQuantity, 10)
+      : null
 
     if (!trimmedName) {
       setSaveError('Ingredient name is required.')
+      return
+    }
+    if (
+      hasDefaultQuantity &&
+      Number.isNaN(parsedDefaultQuantity) ||
+      (hasDefaultQuantity &&
+        String(parsedDefaultQuantity) !== String(editDefaultQuantity).trim()) ||
+      (hasDefaultQuantity && parsedDefaultQuantity <= 0)
+    ) {
+      setSaveError('Default quantity must be a whole number greater than 0.')
       return
     }
 
@@ -137,6 +165,8 @@ export default function Ingredients() {
       .update({
         name: trimmedName,
         default_unit: trimmedDefaultUnit || null,
+        default_quantity: parsedDefaultQuantity,
+        supermarket_section: editSupermarketSection || null,
         is_synergy_core: editIsSynergyCore,
       })
       .eq('id', editingIngredient.id)
@@ -293,6 +323,8 @@ export default function Ingredients() {
                   <tr>
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Default Unit</th>
+                    <th className="px-4 py-3">Default Quantity</th>
+                    <th className="px-4 py-3">Supermarket Section</th>
                     <th className="px-4 py-3">Synergy Core</th>
                     <th className="px-4 py-3">Used</th>
                     <th className="px-4 py-3 text-right">Action</th>
@@ -307,6 +339,12 @@ export default function Ingredients() {
                       <td className="px-4 py-3 font-semibold">{ingredient.name || 'Unnamed ingredient'}</td>
                       <td className="px-4 py-3 text-sky-600 dark:text-sky-300">
                         {ingredient.default_unit || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sky-600 dark:text-sky-300">
+                        {ingredient.default_quantity || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sky-600 dark:text-sky-300">
+                        {ingredient.supermarket_section || '—'}
                       </td>
                       <td className="px-4 py-3 text-sky-600 dark:text-sky-300">
                         {ingredient.is_synergy_core ? 'Yes' : 'No'}
@@ -379,6 +417,35 @@ export default function Ingredients() {
                   onChange={(event) => setEditDefaultUnit(event.target.value)}
                   placeholder="g"
                 />
+              </label>
+
+              <label className="flex flex-col gap-2 text-sm font-semibold text-sky-800 dark:text-sky-100">
+                Default quantity
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+                  value={editDefaultQuantity}
+                  onChange={(event) => setEditDefaultQuantity(event.target.value)}
+                  placeholder="1"
+                />
+              </label>
+
+              <label className="flex flex-col gap-2 text-sm font-semibold text-sky-800 dark:text-sky-100">
+                Supermarket section
+                <select
+                  className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:focus:border-white dark:focus:ring-white/40"
+                  value={editSupermarketSection}
+                  onChange={(event) => setEditSupermarketSection(event.target.value)}
+                >
+                  <option value="">Select section</option>
+                  {SUPERMARKET_SECTIONS.map((section) => (
+                    <option key={section} value={section}>
+                      {section}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className="flex items-center gap-3 text-sm font-semibold text-sky-800 dark:text-sky-100">

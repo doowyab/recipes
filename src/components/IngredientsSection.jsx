@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+const SUPERMARKET_SECTIONS = [
+  'Fruit & Vegtables',
+  'Fridge',
+  'Bakery',
+  'Cupboard',
+  'Snacks and Sweets',
+  'Alcohol',
+  'Freezer',
+]
+
 function normalizeName(value) {
   return value.trim().toLowerCase()
 }
@@ -52,6 +62,8 @@ export default function IngredientsSection({ recipeId }) {
   const [showForm, setShowForm] = useState(false)
   const [query, setQuery] = useState('')
   const [newUnit, setNewUnit] = useState('')
+  const [newDefaultQuantity, setNewDefaultQuantity] = useState('')
+  const [newSupermarketSection, setNewSupermarketSection] = useState('')
   const [newIsFresh, setNewIsFresh] = useState(false)
   const [draftMode, setDraftMode] = useState(null)
   const [selectedIngredient, setSelectedIngredient] = useState(null)
@@ -81,7 +93,7 @@ export default function IngredientsSection({ recipeId }) {
     const { data, error: fetchError } = await supabase
       .from('recipe_ingredients')
       .select(
-        'ingredient_id, quantity, unit, notes, ingredients ( id, name, default_unit )'
+        'ingredient_id, quantity, unit, notes, ingredients ( id, name, default_unit, default_quantity, supermarket_section )'
       )
       .eq('recipe_id', recipeId)
 
@@ -119,7 +131,7 @@ export default function IngredientsSection({ recipeId }) {
       setSearching(true)
       const { data, error: searchError } = await supabase
         .from('ingredients')
-        .select('id, name, default_unit')
+        .select('id, name, default_unit, default_quantity, supermarket_section')
         .ilike('name', `%${normalizedQuery}%`)
         .order('name')
         .limit(8)
@@ -162,9 +174,20 @@ export default function IngredientsSection({ recipeId }) {
     return Number.isNaN(parsed) ? null : parsed
   }
 
+  function toPositiveWholeNumberOrNull(value) {
+    if (value === '' || value === null || value === undefined) return null
+    const parsed = Number.parseInt(value, 10)
+    if (Number.isNaN(parsed)) return null
+    if (String(parsed) !== String(value).trim()) return null
+    if (parsed <= 0) return null
+    return parsed
+  }
+
   function resetDraftState() {
     setQuery('')
     setNewUnit('')
+    setNewDefaultQuantity('')
+    setNewSupermarketSection('')
     setNewIsFresh(false)
     setDraftMode(null)
     setSelectedIngredient(null)
@@ -220,12 +243,20 @@ export default function IngredientsSection({ recipeId }) {
   async function handleCreateIngredient() {
     if (!normalizedQuery) return
     setActionStatus('')
+    const parsedDefaultQuantity = toPositiveWholeNumberOrNull(newDefaultQuantity)
+    const hasDefaultQuantity = String(newDefaultQuantity ?? '').trim() !== ''
+    if (hasDefaultQuantity && parsedDefaultQuantity === null) {
+      setActionStatus('Default quantity must be a whole number greater than 0.')
+      return
+    }
 
     const { data, error: createError } = await supabase
       .from('ingredients')
       .insert({
         name: query.trim(),
         default_unit: newUnit,
+        default_quantity: parsedDefaultQuantity,
+        supermarket_section: newSupermarketSection || null,
         is_synergy_core: newIsFresh,
       })
       .select('id')
@@ -243,6 +274,7 @@ export default function IngredientsSection({ recipeId }) {
     setActionStatus('')
     setDraftMode('existing')
     setSelectedIngredient(ingredient)
+    setDetailQuantity(ingredient.default_quantity ?? '')
     setDetailUnit(ingredient.default_unit || 'count')
     setDetailErrors({})
   }
@@ -457,6 +489,39 @@ export default function IngredientsSection({ recipeId }) {
                           <option value="tsp">tsp</option>
                           <option value="tbsp">tbsp</option>
                           <option value="cup">cup</option>
+                        </select>
+                      </label>
+
+                      <label className="form-label">
+                        Default Quantity
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={newDefaultQuantity}
+                          onChange={(event) =>
+                            setNewDefaultQuantity(event.target.value)
+                          }
+                          className="rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-sky-900 outline-none focus:border-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100 dark:focus:border-sky-400"
+                          placeholder="1"
+                        />
+                      </label>
+
+                      <label className="form-label">
+                        Supermarket Section
+                        <select
+                          value={newSupermarketSection}
+                          onChange={(event) =>
+                            setNewSupermarketSection(event.target.value)
+                          }
+                          className="rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-sky-900 outline-none focus:border-sky-900 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-100 dark:focus:border-sky-400"
+                        >
+                          <option value="">Select section</option>
+                          {SUPERMARKET_SECTIONS.map((section) => (
+                            <option key={section} value={section}>
+                              {section}
+                            </option>
+                          ))}
                         </select>
                       </label>
 

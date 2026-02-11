@@ -13,6 +13,17 @@ function formatQuantity(quantity, unit, defaultUnit) {
   return `${quantity}`
 }
 
+function formatMinutes(value) {
+  if (value === null || value === undefined || value === '') return ''
+  return `${value} min`
+}
+
+function formatHeatBadge(value) {
+  const heat = Number.parseInt(value, 10)
+  if (Number.isNaN(heat) || heat <= 0) return ''
+  return '🌶️'.repeat(Math.min(3, heat))
+}
+
 
 export default function Plan() {
   const [household, setHousehold] = useState(null)
@@ -26,7 +37,9 @@ export default function Plan() {
   const [addingId, setAddingId] = useState('')
   const [removingId, setRemovingId] = useState('')
   const [addOtherSortBy, setAddOtherSortBy] = useState('alphabetical')
+  const [addOtherSortDirection, setAddOtherSortDirection] = useState('asc')
   const [addOtherSelectedIngredients, setAddOtherSelectedIngredients] = useState([])
+  const [addOtherSelectedServings, setAddOtherSelectedServings] = useState('')
 
   const computeSynergy = (planned, all) => {
     const plannedSet = new Set(planned.map((recipe) => recipe.id))
@@ -143,7 +156,7 @@ export default function Plan() {
         const { data: plannedRows, error: plannedError } = await supabase
           .from('recipes')
           .select(
-            'id, title, description, cook_minutes, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
+            'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
           )
           .in('id', recipeIds)
           .order('title')
@@ -172,7 +185,10 @@ export default function Plan() {
             id: recipe.id,
             title: recipe.title || 'Untitled recipe',
             description: recipe.description,
+            preMinutes: recipe.pre_minutes,
             cookMinutes: recipe.cook_minutes,
+            servings: recipe.servings,
+            heat: recipe.heat,
             ingredients,
           }
         })
@@ -186,7 +202,7 @@ export default function Plan() {
       const { data: allRows, error: allError } = await supabase
         .from('recipes')
         .select(
-          'id, title, description, cook_minutes, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
+          'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
         )
         .order('title')
 
@@ -214,7 +230,10 @@ export default function Plan() {
           id: recipe.id,
           title: recipe.title || 'Untitled recipe',
           description: recipe.description,
+          preMinutes: recipe.pre_minutes,
           cookMinutes: recipe.cook_minutes,
+          servings: recipe.servings,
+          heat: recipe.heat,
           ingredients,
         }
       })
@@ -300,17 +319,36 @@ export default function Plan() {
           recipe.ingredients.some((ingredient) => addOtherSelectedIngredients.includes(ingredient.name))
         )
       : addableRecipes
+    const servingsValue =
+      addOtherSelectedServings === '' ? null : Number.parseInt(addOtherSelectedServings, 10)
+    const servingsFiltered =
+      servingsValue === null || Number.isNaN(servingsValue)
+        ? ingredientFiltered
+        : ingredientFiltered.filter((recipe) => recipe.servings === servingsValue)
 
-    return [...ingredientFiltered].sort((a, b) => {
+    const sorted = [...servingsFiltered].sort((a, b) => {
       if (addOtherSortBy === 'cook-time') {
         const aCook = a.cookMinutes ?? Number.POSITIVE_INFINITY
         const bCook = b.cookMinutes ?? Number.POSITIVE_INFINITY
         if (aCook !== bCook) return aCook - bCook
       }
+      if (addOtherSortBy === 'heat-level') {
+        const aHeat = a.heat ?? Number.POSITIVE_INFINITY
+        const bHeat = b.heat ?? Number.POSITIVE_INFINITY
+        if (aHeat !== bHeat) return aHeat - bHeat
+      }
 
       return a.title.localeCompare(b.title)
     })
-  }, [addOtherSelectedIngredients, addOtherSortBy, addableRecipes])
+    if (addOtherSortDirection === 'desc') sorted.reverse()
+    return sorted
+  }, [
+    addOtherSelectedIngredients,
+    addOtherSelectedServings,
+    addOtherSortBy,
+    addOtherSortDirection,
+    addableRecipes,
+  ])
 
   return (
     <>
@@ -368,9 +406,52 @@ export default function Plan() {
                     className="rounded-xl border border-sky-100 bg-white/90 px-4 py-4 shadow-sm shadow-black/5 backdrop-blur dark:border-sky-900 dark:bg-sky-950/70 dark:shadow-black/20"
                   >
                     <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                      <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
-                        {recipe.title}
-                      </h3>
+                      <div>
+                        <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
+                          {recipe.title}
+                        </h3>
+                        {(
+                          (recipe.preMinutes !== null &&
+                            recipe.preMinutes !== undefined &&
+                            recipe.preMinutes !== '') ||
+                          (recipe.cookMinutes !== null &&
+                            recipe.cookMinutes !== undefined &&
+                            recipe.cookMinutes !== '') ||
+                          (recipe.servings !== null &&
+                            recipe.servings !== undefined &&
+                            recipe.servings !== '') ||
+                          formatHeatBadge(recipe.heat)
+                        ) ? (
+                            <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
+                            {recipe.preMinutes !== null &&
+                            recipe.preMinutes !== undefined &&
+                            recipe.preMinutes !== '' ? (
+                              <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                Prep {formatMinutes(recipe.preMinutes)}
+                              </span>
+                            ) : null}
+                            {recipe.cookMinutes !== null &&
+                            recipe.cookMinutes !== undefined &&
+                            recipe.cookMinutes !== '' ? (
+                              <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                Cook {formatMinutes(recipe.cookMinutes)}
+                              </span>
+                            ) : null}
+                            {recipe.servings !== null &&
+                            recipe.servings !== undefined &&
+                            recipe.servings !== '' ? (
+                              <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                Serves {recipe.servings}
+                              </span>
+                            ) : null}
+                            {formatHeatBadge(recipe.heat) ? (
+                              <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                {formatHeatBadge(recipe.heat)}
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveFromPlan(recipe.id)}
@@ -456,6 +537,47 @@ export default function Plan() {
                           <h3 className="text-base font-semibold text-sky-900 dark:text-sky-100">
                             {recipe.title}
                           </h3>
+                          {(
+                            (recipe.preMinutes !== null &&
+                              recipe.preMinutes !== undefined &&
+                              recipe.preMinutes !== '') ||
+                            (recipe.cookMinutes !== null &&
+                              recipe.cookMinutes !== undefined &&
+                              recipe.cookMinutes !== '') ||
+                            (recipe.servings !== null &&
+                              recipe.servings !== undefined &&
+                              recipe.servings !== '') ||
+                            formatHeatBadge(recipe.heat)
+                          ) ? (
+                            <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
+                              {recipe.preMinutes !== null &&
+                              recipe.preMinutes !== undefined &&
+                              recipe.preMinutes !== '' ? (
+                                <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                  Prep {formatMinutes(recipe.preMinutes)}
+                                </span>
+                              ) : null}
+                              {recipe.cookMinutes !== null &&
+                              recipe.cookMinutes !== undefined &&
+                              recipe.cookMinutes !== '' ? (
+                                <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                  Cook {formatMinutes(recipe.cookMinutes)}
+                                </span>
+                              ) : null}
+                              {recipe.servings !== null &&
+                              recipe.servings !== undefined &&
+                              recipe.servings !== '' ? (
+                                <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                  Serves {recipe.servings}
+                                </span>
+                              ) : null}
+                              {formatHeatBadge(recipe.heat) ? (
+                                <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                  {formatHeatBadge(recipe.heat)}
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : null}
                           {synergyCoreByRecipe.get(recipe.id)?.length ? (
                             <div className="mt-2 flex flex-wrap gap-2">
                               {synergyCoreByRecipe.get(recipe.id).map((name) => (
@@ -530,8 +652,12 @@ export default function Plan() {
                 className="mt-4"
                 sortBy={addOtherSortBy}
                 onSortByChange={setAddOtherSortBy}
+                sortDirection={addOtherSortDirection}
+                onSortDirectionChange={setAddOtherSortDirection}
                 selectedIngredients={addOtherSelectedIngredients}
                 onSelectedIngredientsChange={setAddOtherSelectedIngredients}
+                selectedServings={addOtherSelectedServings}
+                onSelectedServingsChange={setAddOtherSelectedServings}
                 recipes={addableRecipes}
               />
               {filteredAddableRecipes.length === 0 ? (
@@ -551,6 +677,47 @@ export default function Plan() {
                             <h3 className="text-base font-semibold text-sky-900 dark:text-sky-100">
                               {recipe.title}
                             </h3>
+                            {(
+                              (recipe.preMinutes !== null &&
+                                recipe.preMinutes !== undefined &&
+                                recipe.preMinutes !== '') ||
+                              (recipe.cookMinutes !== null &&
+                                recipe.cookMinutes !== undefined &&
+                                recipe.cookMinutes !== '') ||
+                              (recipe.servings !== null &&
+                                recipe.servings !== undefined &&
+                                recipe.servings !== '') ||
+                              formatHeatBadge(recipe.heat)
+                            ) ? (
+                              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
+                                {recipe.preMinutes !== null &&
+                                recipe.preMinutes !== undefined &&
+                                recipe.preMinutes !== '' ? (
+                                  <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                    Prep {formatMinutes(recipe.preMinutes)}
+                                  </span>
+                                ) : null}
+                                {recipe.cookMinutes !== null &&
+                                recipe.cookMinutes !== undefined &&
+                                recipe.cookMinutes !== '' ? (
+                                  <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                    Cook {formatMinutes(recipe.cookMinutes)}
+                                  </span>
+                                ) : null}
+                                {recipe.servings !== null &&
+                                recipe.servings !== undefined &&
+                                recipe.servings !== '' ? (
+                                  <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                    Serves {recipe.servings}
+                                  </span>
+                                ) : null}
+                                {formatHeatBadge(recipe.heat) ? (
+                                  <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                                    {formatHeatBadge(recipe.heat)}
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : null}
                             {addOtherSelectedIngredients.length > 0 ? (
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {recipe.ingredients

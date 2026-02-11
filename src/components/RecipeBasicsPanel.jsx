@@ -17,6 +17,21 @@ function validateNonNegativeInt(value, fieldName) {
   return ''
 }
 
+function validateHeatLevel(value) {
+  if (value === '' || value === null || value === undefined) return ''
+  const parsed = Number.parseInt(value, 10)
+  if (Number.isNaN(parsed)) return 'Heat level must be a whole number.'
+  if (String(parsed) !== String(value).trim()) return 'Heat level must be a whole number.'
+  if (parsed < 0 || parsed > 3) return 'Heat level must be between 0 and 3.'
+  return ''
+}
+
+function formatHeatBadge(value) {
+  const heat = Number.parseInt(value, 10)
+  if (Number.isNaN(heat) || heat <= 0) return ''
+  return '🌶️'.repeat(Math.min(3, heat))
+}
+
 export default function RecipeBasicsPanel({
   recipeDraft,
   setRecipeDraft,
@@ -41,6 +56,7 @@ export default function RecipeBasicsPanel({
       preMinutes: validateNonNegativeInt(recipeDraft.preMinutes, 'Prep time'),
       cookMinutes: validateNonNegativeInt(recipeDraft.cookMinutes, 'Cook time'),
       servings: validateNonNegativeInt(recipeDraft.servings, 'Servings'),
+      heat: validateHeatLevel(recipeDraft.heat),
     }
 
     setErrors(nextErrors)
@@ -163,6 +179,28 @@ export default function RecipeBasicsPanel({
               <span className="text-xs text-rose-300">{errors.cookMinutes}</span>
             )}
           </label>
+
+          <label className="form-label">
+            <span>Heat Level</span>
+            <input
+              type="number"
+              min="0"
+              max="3"
+              step="1"
+              className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+              value={recipeDraft.heat}
+              onChange={(event) =>
+                setRecipeDraft((prev) => ({
+                  ...prev,
+                  heat: event.target.value,
+                }))
+              }
+              placeholder="0-3"
+            />
+            {errors.heat && (
+              <span className="text-xs text-rose-300">{errors.heat}</span>
+            )}
+          </label>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -189,7 +227,6 @@ export default function RecipeBasicsPanel({
               ['Serves', recipeDraft.servings],
               ['Prep Time', recipeDraft.preMinutes],
               ['Cook Time', recipeDraft.cookMinutes],
-              ['Heat Level', recipeDraft.heatLevel],
             ]
               .filter(([, value]) => value !== null && value !== undefined && value !== '')
               .map(([label, value]) => (
@@ -200,6 +237,11 @@ export default function RecipeBasicsPanel({
                   {label}: {value}
                 </span>
               ))}
+            {formatHeatBadge(recipeDraft.heat) ? (
+              <span className="rounded-full border border-sky-200 bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-600 dark:border-sky-700 dark:bg-sky-900/70 dark:text-sky-200">
+                {formatHeatBadge(recipeDraft.heat)}
+              </span>
+            ) : null}
           </div>
         </div>
       )}

@@ -3,6 +3,12 @@ import { Helmet } from 'react-helmet-async'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+function formatHeatBadge(value) {
+  const heat = Number.parseInt(value, 10)
+  if (Number.isNaN(heat) || heat <= 0) return ''
+  return '🌶️'.repeat(Math.min(3, heat))
+}
+
 export default function RecipeView() {
   const { recipeId } = useParams()
   const [recipe, setRecipe] = useState(null)
@@ -58,13 +64,13 @@ export default function RecipeView() {
       display: formatMinutes(recipe?.cook_minutes),
     },
     { label: 'Servings', value: recipe?.servings, display: recipe?.servings },
-    { label: 'Heat', value: recipe?.heat, display: recipe?.heat },
   ].filter(
     (badge) =>
       badge.value !== null &&
       badge.value !== undefined &&
       badge.value !== ''
   )
+  const heatBadge = formatHeatBadge(recipe?.heat)
 
   useEffect(() => {
     let isMounted = true
@@ -195,7 +201,7 @@ export default function RecipeView() {
                   {recipe.description}
                 </p>
               ) : null}
-              {badges.length > 0 ? (
+              {badges.length > 0 || heatBadge ? (
                 <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
                   {badges.map((badge) => (
                     <span
@@ -205,6 +211,11 @@ export default function RecipeView() {
                       {badge.label} {badge.display}
                     </span>
                   ))}
+                  {heatBadge ? (
+                    <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                      {heatBadge}
+                    </span>
+                  ) : null}
                 </div>
               ) : null}
             </div>

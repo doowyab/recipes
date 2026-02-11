@@ -9,6 +9,7 @@ export default function Login() {
   const [message, setMessage] = useState(null)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
+  const emailRedirectTo = new URL(import.meta.env.BASE_URL, window.location.origin).toString()
 
   useEffect(() => {
     let isMounted = true
@@ -45,7 +46,7 @@ export default function Login() {
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo,
       },
     })
 

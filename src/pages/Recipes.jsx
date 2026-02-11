@@ -9,6 +9,12 @@ function formatMinutes(value) {
   return `${value} min`
 }
 
+function formatHeatBadge(value) {
+  const heat = Number.parseInt(value, 10)
+  if (Number.isNaN(heat) || heat <= 0) return ''
+  return '🌶️'.repeat(Math.min(3, heat))
+}
+
 export default function Recipes() {
   const [recipes, setRecipes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -18,7 +24,9 @@ export default function Recipes() {
   const [deletingId, setDeletingId] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [sortBy, setSortBy] = useState('alphabetical')
+  const [sortDirection, setSortDirection] = useState('asc')
   const [selectedIngredients, setSelectedIngredients] = useState([])
+  const [selectedServings, setSelectedServings] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -30,7 +38,7 @@ export default function Recipes() {
       const { data, error: fetchError } = await supabase
         .from('recipes')
         .select(
-          'id, title, description, pre_minutes, cook_minutes, servings, recipe_ingredients ( ingredients ( id, name ) )'
+          'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( ingredients ( id, name ) )'
         )
 
       if (!isMounted) return
@@ -108,19 +116,30 @@ export default function Recipes() {
           recipe.ingredients?.some((ingredient) => selectedIngredients.includes(ingredient.name))
         )
       : recipes
+    const servingsValue = selectedServings === '' ? null : Number.parseInt(selectedServings, 10)
+    const servingsFiltered =
+      servingsValue === null || Number.isNaN(servingsValue)
+        ? ingredientFiltered
+        : ingredientFiltered.filter((recipe) => recipe.servings === servingsValue)
 
-    const sorted = [...ingredientFiltered].sort((a, b) => {
+    const sorted = [...servingsFiltered].sort((a, b) => {
       if (sortBy === 'cook-time') {
         const aCook = a.cook_minutes ?? Number.POSITIVE_INFINITY
         const bCook = b.cook_minutes ?? Number.POSITIVE_INFINITY
         if (aCook !== bCook) return aCook - bCook
       }
+      if (sortBy === 'heat-level') {
+        const aHeat = a.heat ?? Number.POSITIVE_INFINITY
+        const bHeat = b.heat ?? Number.POSITIVE_INFINITY
+        if (aHeat !== bHeat) return aHeat - bHeat
+      }
 
       return (a.title || 'Untitled Recipe').localeCompare(b.title || 'Untitled Recipe')
     })
+    if (sortDirection === 'desc') sorted.reverse()
 
     return sorted
-  }, [recipes, selectedIngredients, sortBy])
+  }, [recipes, selectedIngredients, selectedServings, sortBy, sortDirection])
 
   return (
     <>
@@ -137,8 +156,12 @@ export default function Recipes() {
         <RecipeFilterControls
           sortBy={sortBy}
           onSortByChange={setSortBy}
+          sortDirection={sortDirection}
+          onSortDirectionChange={setSortDirection}
           selectedIngredients={selectedIngredients}
           onSelectedIngredientsChange={setSelectedIngredients}
+          selectedServings={selectedServings}
+          onSelectedServingsChange={setSelectedServings}
           recipes={recipes}
         />
         {loading ? (
@@ -167,7 +190,7 @@ export default function Recipes() {
                   display: formatMinutes(recipe.cook_minutes),
                 },
                 {
-                  label: 'Servings',
+                  label: 'Serves',
                   value: recipe.servings,
                   display: recipe.servings,
                 },
@@ -177,6 +200,7 @@ export default function Recipes() {
                   badge.value !== undefined &&
                   badge.value !== ''
               )
+              const heatBadge = formatHeatBadge(recipe.heat)
 
               return (
                 <div
@@ -208,7 +232,7 @@ export default function Recipes() {
                         </p>
                       ) : null}
                     </div>
-                    {badges.length > 0 ? (
+                    {badges.length > 0 || heatBadge ? (
                       <div className="mt-auto flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
                         {badges.map((badge) => (
                           <span
@@ -218,6 +242,11 @@ export default function Recipes() {
                             {badge.label} {badge.display}
                           </span>
                         ))}
+                        {heatBadge ? (
+                          <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                            {heatBadge}
+                          </span>
+                        ) : null}
                       </div>
                     ) : null}
                     <div className="mt-2 flex flex-wrap items-center gap-2">

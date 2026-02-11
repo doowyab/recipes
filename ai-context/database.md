@@ -34,6 +34,8 @@ created_at timestamptz
 name text  
 is_synergy_core bool  
 default_unit text
+default_quantity int2
+supermarket_section text
 
 ## recipe_ingredients
 recipe_id uuid FK → recipes.id  

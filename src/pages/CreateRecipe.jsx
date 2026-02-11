@@ -9,6 +9,11 @@ function toIntOrNull(value) {
   return Number.isNaN(parsed) ? null : parsed
 }
 
+function isValidHeatLevel(value) {
+  if (value === null || value === undefined) return true
+  return Number.isInteger(value) && value >= 0 && value <= 3
+}
+
 function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status }) {
   return (
     <section className="p-0">
@@ -94,6 +99,22 @@ function RecipeBasicsForm({ recipeDraft, setRecipeDraft, onSave, saving, status 
             placeholder="20"
           />
         </label>
+
+        <label className="form-label">
+          <span>Heat Level</span>
+          <input
+            type="number"
+            min="0"
+            max="3"
+            step="1"
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-900 outline-none placeholder:text-slate-400 focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/40"
+            value={recipeDraft.heat}
+            onChange={(event) =>
+              setRecipeDraft((prev) => ({ ...prev, heat: event.target.value }))
+            }
+            placeholder="0-3"
+          />
+        </label>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -123,6 +144,7 @@ export default function CreateRecipe() {
     preMinutes: '',
     cookMinutes: '',
     servings: '',
+    heat: '',
   })
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState('')
@@ -148,10 +170,14 @@ export default function CreateRecipe() {
         pre_minutes: toIntOrNull(recipeDraft.preMinutes),
         cook_minutes: toIntOrNull(recipeDraft.cookMinutes),
         servings: toIntOrNull(recipeDraft.servings),
+        heat: toIntOrNull(recipeDraft.heat),
       }
 
       if (!payload.title) {
         throw new Error('Recipe title is required.')
+      }
+      if (!isValidHeatLevel(payload.heat)) {
+        throw new Error('Heat level must be between 0 and 3.')
       }
 
       const { data, error } = await supabase

@@ -23,6 +23,7 @@ export default function RecipeEdit() {
     preMinutes: '',
     cookMinutes: '',
     servings: '',
+    heat: '',
   })
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function RecipeEdit() {
 
       const { data, error } = await supabase
         .from('recipes')
-        .select('title, description, pre_minutes, cook_minutes, servings')
+        .select('title, description, pre_minutes, cook_minutes, servings, heat')
         .eq('id', recipeId)
         .single()
 
@@ -49,6 +50,7 @@ export default function RecipeEdit() {
           preMinutes: data?.pre_minutes ?? '',
           cookMinutes: data?.cook_minutes ?? '',
           servings: data?.servings ?? '',
+          heat: data?.heat ?? '',
         })
       }
 
@@ -76,6 +78,7 @@ export default function RecipeEdit() {
         pre_minutes: toIntOrNull(recipeDraft.preMinutes),
         cook_minutes: toIntOrNull(recipeDraft.cookMinutes),
         servings: toIntOrNull(recipeDraft.servings),
+        heat: toIntOrNull(recipeDraft.heat),
       }
 
       if (!payload.title) {
