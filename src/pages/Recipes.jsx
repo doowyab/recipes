@@ -12,6 +12,10 @@ export default function Recipes() {
   const [recipes, setRecipes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [pendingDeleteRecipe, setPendingDeleteRecipe] = useState(null)
+  const [deletingId, setDeletingId] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -42,6 +46,47 @@ export default function Recipes() {
       isMounted = false
     }
   }, [])
+
+  const handleRequestDelete = (recipe) => {
+    if (!recipe?.id) return
+    setPendingDeleteRecipe(recipe)
+    setShowDeleteConfirm(true)
+    setDeleteError('')
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteRecipe?.id) return
+
+    setDeletingId(pendingDeleteRecipe.id)
+    setDeleteError('')
+
+    const { error: removeError } = await supabase
+      .from('recipes')
+      .delete()
+      .eq('id', pendingDeleteRecipe.id)
+
+    if (removeError) {
+      const isForeignKeyError =
+        removeError.code === '23503' ||
+        /foreign key|recipe_ingredients|recipe_steps|menu_recipes|plan_recipes|constraint/i.test(
+          removeError.message || ''
+        )
+
+      setDeleteError(
+        isForeignKeyError
+          ? 'Cannot delete this recipe because it is still used in related data.'
+          : removeError.message ?? 'Unable to delete recipe.'
+      )
+      setDeletingId('')
+      return
+    }
+
+    setRecipes((previous) => previous.filter((recipe) => recipe.id !== pendingDeleteRecipe.id))
+    setDeletingId('')
+    setShowDeleteConfirm(false)
+    setPendingDeleteRecipe(null)
+    setDeleteError('')
+  }
 
   return (
     <>
@@ -118,16 +163,23 @@ export default function Recipes() {
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <Link
                         to={`/recipe/${recipe.id}/view`}
-                        className="rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+                        className="rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
                       >
                         View
                       </Link>
                       <Link
                         to={`/recipe/${recipe.id}/edit`}
-                        className="rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
+                        className="rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
                       >
                         Edit
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleRequestDelete(recipe)}
+                        className="rounded-full border border-rose-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-rose-600 transition hover:border-rose-400 hover:text-rose-700 dark:border-rose-500/40 dark:text-rose-200 dark:hover:border-rose-400 dark:hover:text-rose-100"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -147,6 +199,47 @@ export default function Recipes() {
           </div>
         )}
       </div>
+
+      {showDeleteConfirm && pendingDeleteRecipe ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-sky-950/60 px-6">
+          <div className="w-full max-w-md rounded-2xl border border-sky-200 bg-white p-6 shadow-2xl dark:border-sky-800 dark:bg-sky-950">
+            <h2 className="text-xl font-semibold text-sky-900 dark:text-sky-100">
+              Delete this recipe?
+            </h2>
+            <p className="mt-2 text-sm text-sky-600 dark:text-sky-300">
+              You are about to remove{' '}
+              <span className="font-semibold">
+                {pendingDeleteRecipe.title || 'Untitled Recipe'}
+              </span>
+              .
+            </p>
+            {deleteError ? <p className="mt-3 text-sm text-rose-300">{deleteError}</p> : null}
+            <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (deletingId) return
+                  setShowDeleteConfirm(false)
+                  setPendingDeleteRecipe(null)
+                  setDeleteError('')
+                }}
+                className="rounded-full border border-sky-200 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-400 hover:text-sky-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+                disabled={Boolean(deletingId)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-500 dark:hover:bg-rose-400"
+                disabled={Boolean(deletingId)}
+              >
+                {deletingId === pendingDeleteRecipe.id ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   )
 }

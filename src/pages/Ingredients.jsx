@@ -1,6 +1,40 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+
+async function fetchIngredientsWithUsage() {
+  const [{ data: ingredientRows, error: ingredientError }, { data: usageRows, error: usageError }] =
+    await Promise.all([
+      supabase
+        .from('ingredients')
+        .select('id, name, is_synergy_core, default_unit')
+        .order('name', { ascending: true }),
+      supabase.from('recipe_ingredients').select('ingredient_id'),
+    ])
+
+  if (ingredientError) {
+    return { error: ingredientError.message ?? 'Unable to load ingredients.', data: [] }
+  }
+
+  if (usageError) {
+    return { error: usageError.message ?? 'Unable to load ingredient usage.', data: [] }
+  }
+
+  const usageCountByIngredientId = new Map()
+  ;(usageRows ?? []).forEach((row) => {
+    const ingredientId = row?.ingredient_id
+    if (!ingredientId) return
+    usageCountByIngredientId.set(ingredientId, (usageCountByIngredientId.get(ingredientId) ?? 0) + 1)
+  })
+
+  const ingredients = (ingredientRows ?? []).map((ingredient) => ({
+    ...ingredient,
+    usageCount: usageCountByIngredientId.get(ingredient.id) ?? 0,
+  }))
+
+  return { error: '', data: ingredients }
+}
 
 export default function Ingredients() {
   const [ingredients, setIngredients] = useState([])
@@ -18,6 +52,10 @@ export default function Ingredients() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const [usageModalIngredient, setUsageModalIngredient] = useState(null)
+  const [usageRecipes, setUsageRecipes] = useState([])
+  const [usageLoading, setUsageLoading] = useState(false)
+  const [usageError, setUsageError] = useState('')
 
   const ingredientCountText = useMemo(() => {
     const total = ingredients.length
@@ -32,16 +70,13 @@ export default function Ingredients() {
       setLoading(true)
       setError('')
 
-      const { data, error: fetchError } = await supabase
-        .from('ingredients')
-        .select('id, created_at, name, is_synergy_core, default_unit')
-        .order('name', { ascending: true })
+      const { data, error: fetchError } = await fetchIngredientsWithUsage()
 
       if (!isMounted) return
 
       if (fetchError) {
-        setError(fetchError.message ?? 'Unable to load ingredients.')
-        setIngredients([])
+        setError(fetchError)
+        setIngredients(data ?? [])
       } else {
         setIngredients(data ?? [])
       }
@@ -112,13 +147,10 @@ export default function Ingredients() {
       return
     }
 
-    const { data, error: refreshError } = await supabase
-      .from('ingredients')
-      .select('id, created_at, name, is_synergy_core, default_unit')
-      .order('name', { ascending: true })
+    const { data, error: refreshError } = await fetchIngredientsWithUsage()
 
     if (refreshError) {
-      setSaveError(refreshError.message ?? 'Saved, but failed to refresh ingredients.')
+      setSaveError(refreshError || 'Saved, but failed to refresh ingredients.')
       setSaveLoading(false)
       return
     }
@@ -160,13 +192,10 @@ export default function Ingredients() {
       return
     }
 
-    const { data, error: refreshError } = await supabase
-      .from('ingredients')
-      .select('id, created_at, name, is_synergy_core, default_unit')
-      .order('name', { ascending: true })
+    const { data, error: refreshError } = await fetchIngredientsWithUsage()
 
     if (refreshError) {
-      setDeleteError(refreshError.message ?? 'Deleted, but failed to refresh ingredients.')
+      setDeleteError(refreshError || 'Deleted, but failed to refresh ingredients.')
       setDeleteLoading(false)
       return
     }
@@ -178,6 +207,50 @@ export default function Ingredients() {
     setTimeout(() => {
       setSaveSuccess('')
     }, 2500)
+  }
+
+  const openUsageModal = async (ingredient) => {
+    if (!ingredient?.id || !ingredient.usageCount) return
+
+    setUsageModalIngredient(ingredient)
+    setUsageRecipes([])
+    setUsageLoading(true)
+    setUsageError('')
+
+    const { data, error: usageFetchError } = await supabase
+      .from('recipe_ingredients')
+      .select('recipes ( id, title )')
+      .eq('ingredient_id', ingredient.id)
+
+    if (usageFetchError) {
+      setUsageError(usageFetchError.message ?? 'Unable to load recipes for this ingredient.')
+      setUsageLoading(false)
+      return
+    }
+
+    const uniqueById = new Map()
+    ;(data ?? []).forEach((row) => {
+      const recipe = row?.recipes
+      if (!recipe?.id) return
+      uniqueById.set(recipe.id, {
+        id: recipe.id,
+        title: recipe.title || 'Untitled recipe',
+      })
+    })
+
+    const recipes = Array.from(uniqueById.values()).sort((a, b) =>
+      a.title.localeCompare(b.title)
+    )
+
+    setUsageRecipes(recipes)
+    setUsageLoading(false)
+  }
+
+  const closeUsageModal = () => {
+    if (usageLoading) return
+    setUsageModalIngredient(null)
+    setUsageRecipes([])
+    setUsageError('')
   }
 
   return (
@@ -221,6 +294,7 @@ export default function Ingredients() {
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Default Unit</th>
                     <th className="px-4 py-3">Synergy Core</th>
+                    <th className="px-4 py-3">Used</th>
                     <th className="px-4 py-3 text-right">Action</th>
                   </tr>
                 </thead>
@@ -236,6 +310,19 @@ export default function Ingredients() {
                       </td>
                       <td className="px-4 py-3 text-sky-600 dark:text-sky-300">
                         {ingredient.is_synergy_core ? 'Yes' : 'No'}
+                      </td>
+                      <td className="px-4 py-3 text-sky-600 dark:text-sky-300">
+                        {ingredient.usageCount > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => openUsageModal(ingredient)}
+                            className="font-semibold text-sky-700 underline decoration-sky-300 underline-offset-2 transition hover:text-sky-900 dark:text-sky-200 dark:decoration-sky-600 dark:hover:text-white"
+                          >
+                            {ingredient.usageCount}
+                          </button>
+                        ) : (
+                          <span>{ingredient.usageCount}</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">
@@ -355,6 +442,52 @@ export default function Ingredients() {
                 disabled={deleteLoading}
               >
                 {deleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {usageModalIngredient ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-sky-950/60 px-6">
+          <div className="w-full max-w-lg rounded-2xl border border-sky-200 bg-white p-6 shadow-2xl dark:border-sky-800 dark:bg-sky-950">
+            <h2 className="text-xl font-semibold text-sky-900 dark:text-sky-100">
+              {usageModalIngredient.name || 'This ingredient'} is used in{' '}
+              {usageModalIngredient.usageCount} recipe
+              {usageModalIngredient.usageCount === 1 ? '' : 's'}.
+            </h2>
+
+            {usageLoading ? (
+              <p className="mt-4 text-sm text-sky-500 dark:text-sky-400">Loading recipes...</p>
+            ) : usageError ? (
+              <p className="mt-4 text-sm text-rose-300">{usageError}</p>
+            ) : usageRecipes.length === 0 ? (
+              <p className="mt-4 text-sm text-sky-500 dark:text-sky-400">
+                No recipes found for this ingredient.
+              </p>
+            ) : (
+              <ul className="mt-4 max-h-72 list-disc overflow-auto pl-6 text-sm text-sky-700 dark:text-sky-200">
+                {usageRecipes.map((recipe) => (
+                  <li key={recipe.id} className="py-1">
+                    <Link
+                      to={`/recipe/${recipe.id}/view`}
+                      className="transition hover:text-sky-900 hover:underline dark:hover:text-white"
+                    >
+                      {recipe.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={closeUsageModal}
+                className="rounded-full border border-sky-200 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-400 hover:text-sky-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+                disabled={usageLoading}
+              >
+                Close
               </button>
             </div>
           </div>

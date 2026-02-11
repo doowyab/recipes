@@ -123,24 +123,33 @@ function App() {
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-6 text-sm text-sky-600 dark:text-sky-300 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold text-sky-900 dark:text-sky-100">
-              Made with ❤️ by doowyab.
+              Made with ❤️ by{' '}
+              <a
+                href="https://github.com/doowyab/"
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-sky-300 underline-offset-2 transition hover:text-sky-700 dark:decoration-sky-600 dark:hover:text-white"
+              >
+                doowyab
+              </a>
+              .
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em]">
-            <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/recipes">
-              Recipes
-            </Link>
-            <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/ingredients">
-              Ingredients
-            </Link>
             <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/about">
               About
             </Link>
             <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/contact">
               Contact
             </Link>
+            <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/recipes">
+              Recipes
+            </Link>
+            <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/ingredients">
+              Ingredients
+            </Link>
             <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/household">
-              Household
+              Your Household
             </Link>
           </div>
         </div>

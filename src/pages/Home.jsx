@@ -96,20 +96,6 @@ export default function Home() {
             </p>
           </article>
         </section>
-
-        <section className="rounded-3xl border border-sky-200 bg-white p-6 shadow-md shadow-black/5 dark:border-sky-800 dark:bg-sky-950/65 dark:shadow-black/20 md:p-8">
-          <div>
-            <div>
-              <h2 className="text-2xl font-semibold text-sky-900 dark:text-sky-100 md:text-3xl">
-                Save it now. Recall it instantly later.
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm text-sky-600 dark:text-sky-300 md:text-base">
-                Keep your meal planning flow simple: collect recipes, pick your plan, and return to
-                your best ideas when it&apos;s time to cook.
-              </p>
-            </div>
-          </div>
-        </section>
       </div>
     </>
   )
