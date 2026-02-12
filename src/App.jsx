@@ -19,6 +19,7 @@ import RecipeView from './pages/RecipeView.jsx'
 function App() {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const location = useLocation()
   const publicPaths = new Set(['/', '/about', '/contact', '/login'])
   const isPublicPath = publicPaths.has(location.pathname)
@@ -49,6 +50,10 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    setMobileNavOpen(false)
+  }, [location.pathname])
+
   return (
     <div className="flex min-h-screen flex-col bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100">
       <header className="border-b border-sky-200/70 bg-white/80 backdrop-blur dark:border-sky-800/70 dark:bg-sky-950/80">
@@ -56,7 +61,7 @@ function App() {
           <Link className="text-lg font-semibold tracking-tight" to="/">
             🍳 Recipes
           </Link>
-          <nav className="flex items-center gap-6 text-sm text-sky-600 dark:text-sky-300">
+          <nav className="hidden items-center gap-6 text-sm text-sky-600 dark:text-sky-300 md:flex">
             <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/create">
               Add
             </Link>
@@ -86,8 +91,76 @@ function App() {
               </Link>
             )}
           </nav>
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen((prev) => !prev)}
+            className="inline-flex items-center gap-2 rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 md:hidden dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+            aria-expanded={mobileNavOpen}
+            aria-controls="mobile-nav"
+          >
+            Menu
+          </button>
         </div>
       </header>
+
+      {mobileNavOpen ? (
+        <div className="md:hidden">
+          <div
+            className="fixed inset-0 z-40 bg-sky-950/60"
+            role="presentation"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <div
+            id="mobile-nav"
+            className="fixed right-0 top-0 z-50 h-full w-full max-w-xs border-l border-sky-200 bg-white px-6 py-6 shadow-2xl shadow-black/20 dark:border-sky-800 dark:bg-sky-900"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-500 dark:text-sky-400">
+                Navigation
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(false)}
+                className="rounded-full border border-sky-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-6 flex flex-col gap-4 text-base text-sky-700 dark:text-sky-200">
+              <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/create">
+                Add
+              </Link>
+              <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/plan">
+                Plan
+              </Link>
+              <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/shop">
+                Shop
+              </Link>
+              <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/menu">
+                Cook
+              </Link>
+              <div className="mt-4">
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={() => supabase.auth.signOut()}
+                    className="w-full rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+                  >
+                    Log Out
+                  </button>
+                ) : (
+                  <Link
+                    className="inline-flex w-full justify-center rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
+                    to="/login"
+                  >
+                    Log In
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 pt-6 pb-10">
         {authLoading ? (
