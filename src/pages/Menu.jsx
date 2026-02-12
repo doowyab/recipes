@@ -1,7 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
+import RecipeFilterControls from '../components/RecipeFilterControls'
 import { supabase } from '../lib/supabase'
+
+function formatMinutes(value) {
+  if (value === null || value === undefined || value === '') return ''
+  return `${value} min`
+}
+
+function formatHeatBadge(value) {
+  const heat = Number.parseInt(value, 10)
+  if (Number.isNaN(heat) || heat <= 0) return ''
+  return '🌶️'.repeat(Math.min(3, heat))
+}
 
 export default function Menu() {
   const [household, setHousehold] = useState(null)
@@ -12,6 +24,10 @@ export default function Menu() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [pendingRemoveId, setPendingRemoveId] = useState('')
   const [pendingAction, setPendingAction] = useState('')
+  const [sortBy, setSortBy] = useState('alphabetical')
+  const [sortDirection, setSortDirection] = useState('asc')
+  const [selectedIngredients, setSelectedIngredients] = useState([])
+  const [selectedServings, setSelectedServings] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -92,7 +108,9 @@ export default function Menu() {
 
       const { data: recipeRows, error: recipeError } = await supabase
         .from('recipes')
-        .select('id, title, description')
+        .select(
+          'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit ) )'
+        )
         .in('id', recipeIds)
         .order('title')
 
@@ -103,7 +121,24 @@ export default function Menu() {
         return
       }
 
-      setRecipes(recipeRows ?? [])
+      const normalized = (recipeRows ?? []).map((recipe) => ({
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.description,
+        pre_minutes: recipe.pre_minutes,
+        cook_minutes: recipe.cook_minutes,
+        servings: recipe.servings,
+        heat: recipe.heat,
+        ingredients: (recipe.recipe_ingredients ?? []).map((entry) => ({
+          id: entry.ingredients?.id ?? entry.ingredient_id,
+          name: entry.ingredients?.name ?? 'Unnamed ingredient',
+          quantity: entry.quantity,
+          unit: entry.unit,
+          defaultUnit: entry.ingredients?.default_unit,
+        })),
+      }))
+
+      setRecipes(normalized)
       setLoading(false)
     }
 
@@ -150,6 +185,38 @@ export default function Menu() {
     setPendingAction('')
   }
 
+  const filteredRecipes = useMemo(() => {
+    const ingredientFiltered =
+      selectedIngredients.length > 0
+        ? recipes.filter((recipe) =>
+            recipe.ingredients?.some((ingredient) => selectedIngredients.includes(ingredient.name))
+          )
+        : recipes
+    const servingsValue = selectedServings === '' ? null : Number.parseInt(selectedServings, 10)
+    const servingsFiltered =
+      servingsValue === null || Number.isNaN(servingsValue)
+        ? ingredientFiltered
+        : ingredientFiltered.filter((recipe) => recipe.servings === servingsValue)
+
+    const sorted = [...servingsFiltered].sort((a, b) => {
+      if (sortBy === 'cook-time') {
+        const aCook = a.cook_minutes ?? Number.POSITIVE_INFINITY
+        const bCook = b.cook_minutes ?? Number.POSITIVE_INFINITY
+        if (aCook !== bCook) return aCook - bCook
+      }
+      if (sortBy === 'heat-level') {
+        const aHeat = a.heat ?? Number.POSITIVE_INFINITY
+        const bHeat = b.heat ?? Number.POSITIVE_INFINITY
+        if (aHeat !== bHeat) return aHeat - bHeat
+      }
+
+      return (a.title || 'Untitled Recipe').localeCompare(b.title || 'Untitled Recipe')
+    })
+    if (sortDirection === 'desc') sorted.reverse()
+
+    return sorted
+  }, [recipes, selectedIngredients, selectedServings, sortBy, sortDirection])
+
   return (
     <>
       <Helmet>
@@ -191,7 +258,26 @@ export default function Menu() {
                 .
               </p>
             </div>
-            {recipes.map((recipe) => (
+            <RecipeFilterControls
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              sortDirection={sortDirection}
+              onSortDirectionChange={setSortDirection}
+              selectedIngredients={selectedIngredients}
+              onSelectedIngredientsChange={setSelectedIngredients}
+              selectedServings={selectedServings}
+              onSelectedServingsChange={setSelectedServings}
+              recipes={recipes}
+            />
+            {filteredRecipes.length === 0 ? (
+              <div className="flex flex-col gap-3 rounded-xl border border-dashed border-sky-200 bg-sky-50 p-6 text-center dark:border-sky-800 dark:bg-sky-900/50">
+                <p className="text-sm text-sky-600 dark:text-sky-300">No menu recipes match this filter.</p>
+                <p className="text-xs text-sky-500 dark:text-sky-500">
+                  Try another ingredient filter or update your menu.
+                </p>
+              </div>
+            ) : (
+              filteredRecipes.map((recipe) => (
               <div
                 key={recipe.id}
                 className="flex flex-col gap-3 rounded-xl border border-sky-100 bg-white/90 px-4 py-4 shadow-sm shadow-black/5 backdrop-blur dark:border-sky-900 dark:bg-sky-950/70 dark:shadow-black/20 md:flex-row md:items-start md:justify-between"
@@ -200,6 +286,47 @@ export default function Menu() {
                   <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
                     {recipe.title || 'Untitled recipe'}
                   </h3>
+                  {(
+                    (recipe.pre_minutes !== null &&
+                      recipe.pre_minutes !== undefined &&
+                      recipe.pre_minutes !== '') ||
+                    (recipe.cook_minutes !== null &&
+                      recipe.cook_minutes !== undefined &&
+                      recipe.cook_minutes !== '') ||
+                    (recipe.servings !== null &&
+                      recipe.servings !== undefined &&
+                      recipe.servings !== '') ||
+                    formatHeatBadge(recipe.heat)
+                  ) ? (
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
+                      {recipe.pre_minutes !== null &&
+                      recipe.pre_minutes !== undefined &&
+                      recipe.pre_minutes !== '' ? (
+                        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                          Prep {formatMinutes(recipe.pre_minutes)}
+                        </span>
+                      ) : null}
+                      {recipe.cook_minutes !== null &&
+                      recipe.cook_minutes !== undefined &&
+                      recipe.cook_minutes !== '' ? (
+                        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                          Cook {formatMinutes(recipe.cook_minutes)}
+                        </span>
+                      ) : null}
+                      {recipe.servings !== null &&
+                      recipe.servings !== undefined &&
+                      recipe.servings !== '' ? (
+                        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                          Serves {recipe.servings}
+                        </span>
+                      ) : null}
+                      {formatHeatBadge(recipe.heat) ? (
+                        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 dark:border-sky-800 dark:bg-sky-900/60">
+                          {formatHeatBadge(recipe.heat)}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {recipe.description ? (
                     <p className="mt-1 text-sm text-sky-600 dark:text-sky-300">
                       {recipe.description}
@@ -231,7 +358,8 @@ export default function Menu() {
                   </button>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         )}
       </div>

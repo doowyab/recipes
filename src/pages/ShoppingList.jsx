@@ -510,9 +510,9 @@ export default function ShoppingList() {
               </div>
             </div>
             {recipeList.length > 0 ? (
-              <div className="no-print flex flex-col gap-2">
-                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
-                  Recipes:
+              <div className="no-print flex flex-col gap-3">
+                <div className="text-lg font-semibold text-sky-900 dark:text-sky-100">
+                  Recipes
                 </div>
                 <ul className="rounded-lg border border-sky-100 bg-white px-5 py-3 pl-8 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-200">
                   {recipeList.map((recipe) => (
@@ -529,8 +529,8 @@ export default function ShoppingList() {
               </div>
             ) : null}
             {recipeList.length > 0 ? (
-              <label className="no-print flex w-full max-w-md flex-col gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
-                Online supermarket:
+              <label className="no-print mt-2 flex w-full max-w-md flex-col gap-3 text-lg font-semibold text-sky-900 dark:text-sky-100">
+                Online Supermarket
                 <select
                   value={selectedSupermarket}
                   onChange={(event) => setSelectedSupermarket(event.target.value)}
@@ -582,9 +582,9 @@ export default function ShoppingList() {
                       </ul>
                     </div>
                   ) : null}
-                  <div className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
-                    Ingredient to Buy:
-                  </div>
+                  <h2 className="mt-2 text-lg font-semibold text-sky-900 dark:text-sky-100">
+                    Ingredients to Buy
+                  </h2>
                   <div className="rounded-lg border border-sky-100 bg-white px-4 py-4 dark:border-sky-800 dark:bg-sky-950/60">
                     <div className="flex flex-col gap-4">
                       {groupedUncheckedItems.map((group) => (
@@ -635,9 +635,9 @@ export default function ShoppingList() {
                 </div>
                 {checkedList.length > 0 ? (
                   <div className="mt-4 flex flex-col gap-2">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
-                      Ingredients you already have:
-                    </p>
+                    <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
+                      Ingredients You Already Have
+                    </h2>
                     <div className="rounded-lg border border-sky-100 bg-white px-4 py-4 dark:border-sky-800 dark:bg-sky-950/60">
                       <div className="flex flex-col gap-4">
                         {groupedCheckedItems.map((group) => (
