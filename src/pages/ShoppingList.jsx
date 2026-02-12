@@ -15,11 +15,14 @@ const SECTION_ORDER = [
 const UNCLASSIFIED_SECTION = 'Unclassified'
 
 function formatQuantity(quantity, unit, defaultUnit) {
+  const resolvedUnit = unit || defaultUnit || ''
+  const normalizedUnit = resolvedUnit.toLowerCase()
   if (quantity === null || quantity === undefined || quantity === '') {
-    return unit || defaultUnit || ''
+    return normalizedUnit === 'count' ? '' : resolvedUnit
   }
-  if (unit) return `${quantity} ${unit}`
-  if (defaultUnit) return `${quantity} ${defaultUnit}`
+  if (resolvedUnit) {
+    return normalizedUnit === 'count' ? `${quantity}` : `${quantity} ${resolvedUnit}`
+  }
   return `${quantity}`
 }
 
@@ -151,7 +154,9 @@ export default function ShoppingList() {
 
         const quantityText =
           quantityParts.length > 0 ? quantityParts.join(' + ') : ''
-        const unitText = entry.unit ? ` ${entry.unit}` : ''
+        const normalizedUnit =
+          entry.unit && entry.unit.toLowerCase() === 'count' ? '' : entry.unit
+        const unitText = normalizedUnit ? ` ${normalizedUnit}` : ''
         const display = quantityText
           ? `${quantityText}${unitText} ${entry.name}`
           : entry.name
@@ -454,90 +459,92 @@ export default function ShoppingList() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-start justify-between gap-4 md:flex-nowrap">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4">
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
                     Shopping List
                   </h1>
-                  <p className="text-sm text-sky-600 dark:text-sky-300">
-                    Tick off what&apos;s already in your kitchen, then copy what&apos;s left to send a
-                    helper, print it for a proper paper run, or pick a supermarket to quickly order online.
-                  </p>
-                  <p className="text-sm text-sky-600 dark:text-sky-300">
-                    To change recipes on this list, update your{' '}
-                    <Link className="font-semibold text-sky-900 underline dark:text-white" to="/plan">
-                      plan
-                    </Link>
-                    .
-                  </p>
-                  {recipeList.length > 0 ? (
-                    <div className="no-print mt-1 flex flex-col gap-2">
-                      <div className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
-                        Recipes:
-                      </div>
-                      <ul className="rounded-lg border border-sky-100 bg-white px-5 py-3 pl-8 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-200">
-                        {recipeList.map((recipe) => (
-                          <li key={recipe.id} className="list-disc pl-1">
-                            <Link
-                              to={`/recipe/${recipe.id}/view`}
-                              className="underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:decoration-sky-700 dark:hover:text-white"
-                            >
-                              {recipe.title}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                      <label className="mt-2 flex w-full max-w-xs flex-col gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
-                        Online supermarket:
-                        <select
-                          value={selectedSupermarket}
-                          onChange={(event) => setSelectedSupermarket(event.target.value)}
-                          className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-sky-900 outline-none focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:focus:border-white dark:focus:ring-white/40"
-                        >
-                          <option value="">None</option>
-                          <option value="Sainsburys">Sainsburys</option>
-                          <option value="Waitrose">Waitrose</option>
-                          <option value="Ocado">Ocado</option>
-                          <option value="Asda">Asda</option>
-                          <option value="Tesco">Tesco</option>
-                        </select>
-                      </label>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap items-center gap-3 md:ml-auto md:flex-nowrap md:justify-end">
-                {copyStatus ? (
-                  <span className="no-print text-xs font-semibold uppercase tracking-[0.2em] text-sky-500 dark:text-sky-400">
-                    {copyStatus}
-                  </span>
-                ) : null}
+                <p className="text-sm text-sky-600 dark:text-sky-300">
+                  Tick off what&apos;s already in your kitchen, then copy what&apos;s left to send a
+                  helper, print it for a proper paper run, or pick a supermarket to quickly order online.
+                </p>
+                <p className="text-sm text-sky-600 dark:text-sky-300">
+                  To change recipes on this list, update your{' '}
+                  <Link className="font-semibold text-sky-900 underline dark:text-white" to="/plan">
+                    plan
+                  </Link>
+                  .
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pb-2 md:pb-4">
+              {copyStatus ? (
+                <span className="no-print text-xs font-semibold uppercase tracking-[0.2em] text-sky-500 dark:text-sky-400">
+                  {copyStatus}
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleCopyShoppingList}
+                disabled={shoppingItems.length === 0}
+                className="no-print rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
+              >
+                Copy
+              </button>
                 <button
                   type="button"
-                  onClick={handleCopyShoppingList}
+                  onClick={handlePrintShoppingList}
                   disabled={shoppingItems.length === 0}
-                  className="no-print rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+                  className="no-print rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
                 >
-                  Copy
+                  Print
                 </button>
-                  <button
-                    type="button"
-                    onClick={handlePrintShoppingList}
-                    disabled={shoppingItems.length === 0}
-                    className="no-print rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
+                {shoppingItems.length > 0 ? (
+                  <Link
+                    to="/migrate"
+                    className="no-print rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
                   >
-                    Print
-                  </button>
-                  {shoppingItems.length > 0 ? (
-                    <Link
-                      to="/migrate"
-                      className="no-print rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
-                    >
-                      Move to menu
-                    </Link>
-                  ) : null}
-                </div>
+                    Ready to Cook
+                  </Link>
+                ) : null}
               </div>
+            </div>
+            {recipeList.length > 0 ? (
+              <div className="no-print flex flex-col gap-2">
+                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
+                  Recipes:
+                </div>
+                <ul className="rounded-lg border border-sky-100 bg-white px-5 py-3 pl-8 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-200">
+                  {recipeList.map((recipe) => (
+                    <li key={recipe.id} className="list-disc pl-1">
+                      <Link
+                        to={`/recipe/${recipe.id}/view`}
+                        className="underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:decoration-sky-700 dark:hover:text-white"
+                      >
+                        {recipe.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {recipeList.length > 0 ? (
+              <label className="no-print flex w-full max-w-md flex-col gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-sky-700 dark:text-sky-200">
+                Online supermarket:
+                <select
+                  value={selectedSupermarket}
+                  onChange={(event) => setSelectedSupermarket(event.target.value)}
+                  className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-sky-900 outline-none focus:border-sky-900 focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:focus:border-white dark:focus:ring-white/40"
+                >
+                  <option value="">None</option>
+                  <option value="Sainsburys">Sainsburys</option>
+                  <option value="Waitrose">Waitrose</option>
+                  <option value="Ocado">Ocado</option>
+                  <option value="Asda">Asda</option>
+                  <option value="Tesco">Tesco</option>
+                </select>
+              </label>
+            ) : null}
             {shoppingItems.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-sky-200 bg-sky-50 p-6 text-center dark:border-sky-800 dark:bg-sky-900/40">
                 <p className="text-sm font-semibold text-sky-700 dark:text-sky-200">

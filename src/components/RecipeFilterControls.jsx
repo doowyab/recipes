@@ -51,8 +51,8 @@ export default function RecipeFilterControls({
 
   return (
     <div className={`flex flex-col gap-3 md:flex-row md:items-end ${className}`.trim()}>
-      <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
-        Sort by
+      <label className="form-label">
+        Sort By
         <select
           value={sortBy}
           onChange={(event) => onSortByChange(event.target.value)}
@@ -64,7 +64,7 @@ export default function RecipeFilterControls({
         </select>
       </label>
 
-      <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
+      <label className="form-label">
         Direction
         <select
           value={sortDirection}
@@ -76,7 +76,7 @@ export default function RecipeFilterControls({
         </select>
       </label>
 
-      <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
+      <label className="form-label">
         Serves
         <select
           value={selectedServings}
@@ -92,7 +92,7 @@ export default function RecipeFilterControls({
         </select>
       </label>
 
-      <div className="flex min-w-[16rem] flex-col gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
+      <div className="form-label min-w-[16rem]">
         <span>Ingredients</span>
         <details className="group relative">
           <summary className="cursor-pointer list-none rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-sky-900 outline-none transition hover:border-sky-400 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100">

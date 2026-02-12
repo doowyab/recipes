@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import IngredientsSection from '../components/IngredientsSection'
 import RecipeBasicsPanel from '../components/RecipeBasicsPanel'
@@ -111,18 +111,29 @@ export default function RecipeEdit() {
             : 'Edit Recipe · Recipes'}
         </title>
       </Helmet>
-    <div className="flex w-full flex-col gap-8 text-left">
-      <RecipeBasicsPanel
-        recipeDraft={recipeDraft}
-        setRecipeDraft={setRecipeDraft}
-        onSave={handleSaveBasics}
-        loading={loading}
-        saving={saving}
-        status={status}
-      />
-      <IngredientsSection recipeId={recipeId} />
-      <RecipeStepsSection recipeId={recipeId} />
-    </div>
+      <div className="flex w-full flex-col gap-8 text-left">
+        <h1 className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
+          Edit Recipe
+        </h1>
+        <RecipeBasicsPanel
+          recipeDraft={recipeDraft}
+          setRecipeDraft={setRecipeDraft}
+          onSave={handleSaveBasics}
+          loading={loading}
+          saving={saving}
+          status={status}
+        />
+        <IngredientsSection recipeId={recipeId} />
+        <RecipeStepsSection recipeId={recipeId} />
+        <div className="flex">
+          <Link
+            to="/recipes"
+            className="rounded-full bg-sky-900 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
+          >
+            Finish
+          </Link>
+        </div>
+      </div>
     </>
   )
 }

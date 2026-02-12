@@ -5,11 +5,14 @@ import RecipeFilterControls from '../components/RecipeFilterControls'
 import { supabase } from '../lib/supabase'
 
 function formatQuantity(quantity, unit, defaultUnit) {
+  const resolvedUnit = unit || defaultUnit || ''
+  const normalizedUnit = resolvedUnit.toLowerCase()
   if (quantity === null || quantity === undefined || quantity === '') {
-    return unit || defaultUnit || ''
+    return normalizedUnit === 'count' ? '' : resolvedUnit
   }
-  if (unit) return `${quantity} ${unit}`
-  if (defaultUnit) return `${quantity} ${defaultUnit}`
+  if (resolvedUnit) {
+    return normalizedUnit === 'count' ? `${quantity}` : `${quantity} ${resolvedUnit}`
+  }
   return `${quantity}`
 }
 
@@ -390,7 +393,7 @@ export default function Plan() {
                   Once you have purchased all the ingredients in your plan you can promote the plan to the menu.
                 </p>
               </div>
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-500 dark:text-sky-400">
+              <span className="hidden text-xs font-semibold uppercase tracking-[0.25em] text-sky-500 dark:text-sky-400 md:inline-block">
                 {recipes.length} total
               </span>
             </div>
@@ -405,8 +408,8 @@ export default function Plan() {
                     key={recipe.id}
                     className="rounded-xl border border-sky-100 bg-white/90 px-4 py-4 shadow-sm shadow-black/5 backdrop-blur dark:border-sky-900 dark:bg-sky-950/70 dark:shadow-black/20"
                   >
-                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                      <div>
+                    <div className="flex flex-col gap-3 md:grid md:grid-cols-[1fr_auto] md:items-start md:gap-x-4 md:gap-y-3">
+                      <div className="md:col-start-1 md:row-start-1">
                         <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100">
                           {recipe.title}
                         </h3>
@@ -452,16 +455,7 @@ export default function Plan() {
                           </div>
                         ) : null}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFromPlan(recipe.id)}
-                        disabled={removingId === recipe.id}
-                        className="w-full rounded-full border border-rose-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-rose-600 transition hover:border-rose-400 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto dark:border-rose-500/40 dark:text-rose-200 dark:hover:border-rose-400 dark:hover:text-rose-100"
-                      >
-                        {removingId === recipe.id ? 'Removing...' : 'Remove'}
-                      </button>
-                    </div>
-                    <details className="mt-4">
+                      <details className="md:col-start-1 md:row-start-2">
                       <summary className="cursor-pointer text-sm font-semibold text-sky-700 transition hover:text-sky-900 dark:text-sky-200 dark:hover:text-white">
                         Ingredients
                       </summary>
@@ -470,21 +464,16 @@ export default function Plan() {
                           No ingredients listed.
                         </p>
                       ) : (
-                        <ul className="mt-3 flex flex-wrap gap-2 text-sm text-sky-700 dark:text-sky-200">
+                        <ul className="mt-3 grid list-disc gap-2 pl-5 text-sm text-sky-700 dark:text-sky-200 md:grid-cols-2 md:gap-x-6">
                           {recipe.ingredients.map((ingredient) => (
-                            <li
-                              key={`${recipe.id}-${ingredient.id}`}
-                              className="flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 dark:border-sky-900 dark:bg-sky-900/50"
-                            >
+                            <li key={`${recipe.id}-${ingredient.id}`}>
                               <span className="font-semibold text-sky-900 dark:text-sky-100">
-                                {ingredient.name}
-                              </span>
-                              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
                                 {formatQuantity(
                                   ingredient.quantity,
                                   ingredient.unit,
                                   ingredient.defaultUnit
-                                )}
+                                )}{' '}
+                                {ingredient.name}
                               </span>
                               {ingredient.notes ? (
                                 <span className="text-xs text-sky-500 dark:text-sky-400">
@@ -495,7 +484,16 @@ export default function Plan() {
                           ))}
                         </ul>
                       )}
-                    </details>
+                      </details>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFromPlan(recipe.id)}
+                        disabled={removingId === recipe.id}
+                        className="w-full rounded-full border border-rose-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-rose-600 transition hover:border-rose-400 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60 md:col-start-2 md:row-start-1 md:w-auto md:justify-self-end md:self-start md:py-1.5 dark:border-rose-500/40 dark:text-rose-200 dark:hover:border-rose-400 dark:hover:text-rose-100"
+                      >
+                        {removingId === recipe.id ? 'Removing...' : 'Remove'}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -513,7 +511,7 @@ export default function Plan() {
                   to="/migrate"
                   className="rounded-full bg-sky-900 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
                 >
-                  Move to menu
+                  Ready to Cook
                 </Link>
               </div>
             ) : null}
@@ -599,22 +597,17 @@ export default function Plan() {
                                 No ingredients listed.
                               </p>
                             ) : (
-                              <ul className="mt-3 flex flex-wrap gap-2 text-sm text-sky-700 dark:text-sky-200">
-                                {recipe.ingredients.map((ingredient) => (
-                                  <li
-                                    key={`${recipe.id}-synergy-${ingredient.id}`}
-                                    className="flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 dark:border-sky-900 dark:bg-sky-900/50"
-                                  >
-                                    <span className="font-semibold text-sky-900 dark:text-sky-100">
-                                      {ingredient.name}
-                                    </span>
-                                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
-                                      {formatQuantity(
-                                        ingredient.quantity,
-                                        ingredient.unit,
-                                        ingredient.defaultUnit
-                                      )}
-                                    </span>
+                        <ul className="mt-3 grid list-disc gap-2 pl-5 text-sm text-sky-700 dark:text-sky-200 md:grid-cols-2 md:gap-x-6">
+                          {recipe.ingredients.map((ingredient) => (
+                            <li key={`${recipe.id}-synergy-${ingredient.id}`}>
+                              <span className="font-semibold text-sky-900 dark:text-sky-100">
+                                {formatQuantity(
+                                  ingredient.quantity,
+                                  ingredient.unit,
+                                  ingredient.defaultUnit
+                                )}{' '}
+                                {ingredient.name}
+                              </span>
                                     {ingredient.notes ? (
                                       <span className="text-xs text-sky-500 dark:text-sky-400">
                                         {ingredient.notes}
@@ -672,8 +665,8 @@ export default function Plan() {
                         key={`add-${recipe.id}`}
                         className="rounded-xl border border-sky-100 bg-white px-4 py-4 dark:border-sky-900 dark:bg-sky-950/70"
                       >
-                        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                          <div className="flex-1">
+                        <div className="flex flex-col gap-3 md:grid md:grid-cols-[1fr_auto] md:items-start md:gap-x-4 md:gap-y-3">
+                          <div className="flex-1 md:col-start-1 md:row-start-1">
                             <h3 className="text-base font-semibold text-sky-900 dark:text-sky-100">
                               {recipe.title}
                             </h3>
@@ -735,17 +728,7 @@ export default function Plan() {
                               </div>
                             ) : null}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleAddToPlan(recipe.id)}
-                            disabled={addingId === recipe.id}
-                            className="w-full rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
-                          >
-                            {addingId === recipe.id ? 'Adding...' : 'Add'}
-                          </button>
-                        </div>
-                        <div className="mt-4">
-                          <details>
+                          <details className="md:col-start-1 md:row-start-2">
                             <summary className="cursor-pointer text-sm font-semibold text-sky-700 transition hover:text-sky-900 dark:text-sky-200 dark:hover:text-white">
                               Ingredients
                             </summary>
@@ -754,21 +737,16 @@ export default function Plan() {
                                 No ingredients listed.
                               </p>
                             ) : (
-                              <ul className="mt-3 flex flex-wrap gap-2 text-sm text-sky-700 dark:text-sky-200">
+                              <ul className="mt-3 grid list-disc gap-2 pl-5 text-sm text-sky-700 dark:text-sky-200 md:grid-cols-2 md:gap-x-6">
                                 {recipe.ingredients.map((ingredient) => (
-                                  <li
-                                    key={`${recipe.id}-add-${ingredient.id}`}
-                                    className="flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 dark:border-sky-900 dark:bg-sky-900/50"
-                                  >
+                                  <li key={`${recipe.id}-add-${ingredient.id}`}>
                                     <span className="font-semibold text-sky-900 dark:text-sky-100">
-                                      {ingredient.name}
-                                    </span>
-                                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">
                                       {formatQuantity(
                                         ingredient.quantity,
                                         ingredient.unit,
                                         ingredient.defaultUnit
-                                      )}
+                                      )}{' '}
+                                      {ingredient.name}
                                     </span>
                                     {ingredient.notes ? (
                                       <span className="text-xs text-sky-500 dark:text-sky-400">
@@ -780,6 +758,14 @@ export default function Plan() {
                               </ul>
                             )}
                           </details>
+                          <button
+                            type="button"
+                            onClick={() => handleAddToPlan(recipe.id)}
+                            disabled={addingId === recipe.id}
+                            className="w-full rounded-full bg-sky-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60 md:col-start-2 md:row-start-1 md:w-auto md:justify-self-end md:self-start md:py-1.5 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
+                          >
+                            {addingId === recipe.id ? 'Adding...' : 'Add'}
+                          </button>
                         </div>
                       </div>
                     )
