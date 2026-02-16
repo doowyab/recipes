@@ -74,6 +74,12 @@ export default function IngredientsSection({ recipeId }) {
   const [suggestions, setSuggestions] = useState([])
   const [searching, setSearching] = useState(false)
   const [actionStatus, setActionStatus] = useState('')
+  const [isJsonModalOpen, setIsJsonModalOpen] = useState(false)
+  const [jsonInput, setJsonInput] = useState('')
+  const [jsonImportError, setJsonImportError] = useState('')
+  const [importQueue, setImportQueue] = useState([])
+  const [importIndex, setImportIndex] = useState(0)
+  const [pendingImportedDetail, setPendingImportedDetail] = useState(null)
 
   const normalizedQuery = useMemo(() => normalizeName(query), [query])
   const hasExactMatch = useMemo(
@@ -199,6 +205,118 @@ export default function IngredientsSection({ recipeId }) {
     setShowForm(false)
   }
 
+  function clearImportQueue() {
+    setImportQueue([])
+    setImportIndex(0)
+    setPendingImportedDetail(null)
+  }
+
+  function prefillImportedIngredient(nextIndex, sourceQueue = importQueue) {
+    const next = sourceQueue[nextIndex]
+    if (!next) return
+
+    setImportIndex(nextIndex)
+    setShowForm(true)
+    setQuery(next.name)
+    setDraftMode(null)
+    setSelectedIngredient(null)
+    setNewUnit('')
+    setNewDefaultQuantity('')
+    setNewSupermarketSection('')
+    setNewIsFresh(false)
+    setDetailQuantity('')
+    setDetailUnit('')
+    setDetailNotes('')
+    setDetailErrors({})
+    setSuggestions([])
+    setPendingImportedDetail({
+      quantity: next.quantity,
+      unit: next.unit,
+    })
+    setActionStatus(
+      `Imported ingredient ${nextIndex + 1} of ${sourceQueue.length} loaded. Review, then add.`
+    )
+  }
+
+  function openJsonModal() {
+    setIsJsonModalOpen(true)
+    setJsonImportError('')
+  }
+
+  function closeJsonModal() {
+    setIsJsonModalOpen(false)
+    setJsonImportError('')
+  }
+
+  function handleLoadIngredientsFromJson() {
+    setJsonImportError('')
+
+    let parsed
+    try {
+      parsed = JSON.parse(jsonInput)
+    } catch {
+      setJsonImportError('Invalid JSON. Please check and try again.')
+      return
+    }
+
+    const incoming = parsed?.ingredients
+    if (!Array.isArray(incoming)) {
+      setJsonImportError('JSON must be an object with an `ingredients` array.')
+      return
+    }
+
+    const normalized = []
+    for (let index = 0; index < incoming.length; index += 1) {
+      const candidate = incoming[index]
+      if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+        setJsonImportError(`Ingredient ${index + 1} must be an object.`)
+        return
+      }
+
+      if (typeof candidate.name !== 'string' || !candidate.name.trim()) {
+        setJsonImportError(`Ingredient ${index + 1} must include a non-empty name.`)
+        return
+      }
+
+      if (
+        candidate.unit !== undefined &&
+        candidate.unit !== null &&
+        typeof candidate.unit !== 'string'
+      ) {
+        setJsonImportError(`Ingredient ${index + 1} has an invalid unit.`)
+        return
+      }
+
+      if (
+        candidate.quantity !== undefined &&
+        candidate.quantity !== null &&
+        typeof candidate.quantity !== 'string' &&
+        typeof candidate.quantity !== 'number'
+      ) {
+        setJsonImportError(`Ingredient ${index + 1} has an invalid quantity.`)
+        return
+      }
+
+      normalized.push({
+        name: candidate.name.trim(),
+        unit: (candidate.unit ?? '').toString().trim(),
+        quantity:
+          candidate.quantity === undefined || candidate.quantity === null
+            ? ''
+            : String(candidate.quantity).trim(),
+      })
+    }
+
+    if (normalized.length === 0) {
+      setJsonImportError('No ingredients found in JSON.')
+      return
+    }
+
+    setImportQueue(normalized)
+    closeJsonModal()
+    prefillImportedIngredient(0, normalized)
+  }
+
   async function addIngredientToRecipe(ingredientId) {
     if (!recipeId) return
     setActionStatus('')
@@ -218,8 +336,17 @@ export default function IngredientsSection({ recipeId }) {
       return
     }
 
-    resetDraftState()
     await loadIngredients()
+
+    if (importQueue.length > 0 && importIndex < importQueue.length - 1) {
+      prefillImportedIngredient(importIndex + 1)
+      return
+    }
+
+    if (importQueue.length > 0) {
+      clearImportQueue()
+    }
+    resetDraftState()
   }
 
   async function removeIngredientFromRecipe(ingredientId) {
@@ -274,8 +401,16 @@ export default function IngredientsSection({ recipeId }) {
     setActionStatus('')
     setDraftMode('existing')
     setSelectedIngredient(ingredient)
-    setDetailQuantity(ingredient.default_quantity ?? '')
-    setDetailUnit(ingredient.default_unit || 'count')
+    setDetailQuantity(
+      pendingImportedDetail?.quantity !== undefined &&
+        pendingImportedDetail?.quantity !== null &&
+        pendingImportedDetail.quantity !== ''
+        ? pendingImportedDetail.quantity
+        : ingredient.default_quantity ?? ''
+    )
+    setDetailUnit(
+      pendingImportedDetail?.unit?.trim() || ingredient.default_unit || 'count'
+    )
     setDetailErrors({})
   }
 
@@ -284,6 +419,14 @@ export default function IngredientsSection({ recipeId }) {
     setActionStatus('')
     setDraftMode('new')
     setSelectedIngredient(null)
+    setDetailQuantity(
+      pendingImportedDetail?.quantity !== undefined &&
+        pendingImportedDetail?.quantity !== null
+        ? pendingImportedDetail.quantity
+        : ''
+    )
+    setDetailUnit(pendingImportedDetail?.unit?.trim() || newUnit || 'count')
+    setNewUnit(pendingImportedDetail?.unit?.trim() || newUnit)
     setDetailErrors({})
   }
 
@@ -313,8 +456,15 @@ export default function IngredientsSection({ recipeId }) {
 
   return (
     <section className="rounded-2xl border border-sky-200 bg-white/80 p-6 shadow-lg shadow-black/5 dark:border-sky-800 dark:bg-sky-950/70 dark:shadow-black/20">
-      <header className="mb-2">
+      <header className="mb-2 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">Ingredients</h2>
+        <button
+          type="button"
+          onClick={openJsonModal}
+          className="rounded-lg border border-sky-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+        >
+          Add by JSON
+        </button>
       </header>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
@@ -372,6 +522,11 @@ export default function IngredientsSection({ recipeId }) {
         {showForm ? (
           <div className="flex flex-col gap-3">
             <hr className="my-4 border-sky-200 dark:border-sky-800" />
+            {importQueue.length > 0 ? (
+              <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-600 dark:border-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                Import queue: {importIndex + 1} / {importQueue.length}
+              </div>
+            ) : null}
             {draftMode === null ? (
               <label className="form-label">
                 Ingredient name
@@ -587,7 +742,73 @@ export default function IngredientsSection({ recipeId }) {
         >
           {showForm ? 'Cancel' : 'Add Ingredient'}
         </button>
+
+        {importQueue.length > 0 && !showForm ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => prefillImportedIngredient(importIndex)}
+              className="rounded-lg border border-sky-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+            >
+              Continue Imported
+            </button>
+            <button
+              type="button"
+              onClick={clearImportQueue}
+              className="rounded-lg border border-rose-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-rose-600 transition hover:border-rose-400 hover:text-rose-700 dark:border-rose-900/60 dark:text-rose-300 dark:hover:border-rose-700 dark:hover:text-rose-200"
+            >
+              Clear Imported
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      {isJsonModalOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-sky-950/60 px-6">
+          <div className="w-full max-w-3xl rounded-2xl border border-sky-200 bg-white p-6 shadow-2xl dark:border-sky-800 dark:bg-sky-950">
+            <h3 className="text-xl font-semibold text-sky-900 dark:text-sky-100">
+              Add ingredients from JSON
+            </h3>
+            <p className="mt-2 text-sm text-sky-600 dark:text-sky-300">
+              Format: JSON object with an <code>ingredients</code> array using{' '}
+              <code>{'{ name, unit, quantity, notes }'}</code>. The <code>notes</code>{' '}
+              value is ignored.
+            </p>
+
+            <label className="mt-4 block">
+              <textarea
+                rows={14}
+                value={jsonInput}
+                onChange={(event) => setJsonInput(event.target.value)}
+                className="w-full rounded-lg border border-sky-200 bg-white px-3 py-3 font-mono text-sm text-sky-900 outline-none focus:border-sky-900 dark:border-sky-700 dark:bg-sky-900 dark:text-sky-100 dark:focus:border-sky-400"
+                placeholder={`{\n  "ingredients": [\n    { "name": "Onion", "unit": "count", "quantity": 1, "notes": "" },\n    { "name": "Olive oil", "unit": "tbsp", "quantity": 2, "notes": "optional" }\n  ]\n}`}
+                autoFocus
+              />
+            </label>
+
+            {jsonImportError ? (
+              <p className="mt-3 text-sm text-rose-500 dark:text-rose-300">{jsonImportError}</p>
+            ) : null}
+
+            <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeJsonModal}
+                className="rounded-full border border-sky-200 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLoadIngredientsFromJson}
+                className="rounded-full bg-sky-900 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
+              >
+                Load Ingredients
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }
