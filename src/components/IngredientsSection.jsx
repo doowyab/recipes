@@ -448,6 +448,7 @@ export default function IngredientsSection({ recipeId }) {
                       <option value="">Select unit</option>
                       <option value="count">count</option>
                       <option value="g">g</option>
+                      <option value="ml">ml</option>
                       <option value="tsp">tsp</option>
                       <option value="tbsp">tbsp</option>
                       <option value="cup">cup</option>
@@ -486,6 +487,7 @@ export default function IngredientsSection({ recipeId }) {
                           <option value="">Select unit</option>
                           <option value="count">count</option>
                           <option value="g">g</option>
+                          <option value="ml">ml</option>
                           <option value="tsp">tsp</option>
                           <option value="tbsp">tbsp</option>
                           <option value="cup">cup</option>
