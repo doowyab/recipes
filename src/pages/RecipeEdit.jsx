@@ -127,7 +127,7 @@ export default function RecipeEdit() {
         <RecipeStepsSection recipeId={recipeId} />
         <div className="flex">
           <Link
-            to="/recipes"
+            to={`/recipe/${recipeId}/view`}
             className="rounded-full bg-sky-900 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/10 transition hover:bg-sky-800 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
           >
             Finish
