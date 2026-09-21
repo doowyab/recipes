@@ -9,6 +9,7 @@ import Ingredients from './pages/Ingredients'
 import Login from './pages/Login'
 import Migrate from './pages/Migrate'
 import Menu from './pages/Menu'
+import Mortgage from './pages/Mortgage'
 import Plan from './pages/Plan'
 import Recipes from './pages/Recipes'
 import ShoppingList from './pages/ShoppingList'
@@ -53,6 +54,10 @@ function App() {
   useEffect(() => {
     setMobileNavOpen(false)
   }, [location.pathname])
+
+  if (location.pathname === '/mortgage') {
+    return <Mortgage />
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100">
