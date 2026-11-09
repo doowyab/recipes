@@ -40,14 +40,38 @@ auth.onAuthStateChange = (callback) => {
   return { data: { subscription: { ...data.subscription, unsubscribe } } }
 }
 
-const originalVerifyOtp = auth.verifyOtp
-auth.verifyOtp = async (params) => {
-  const result = await originalVerifyOtp(params)
+const originalSignInWithPassword = auth.signInWithPassword
+auth.signInWithPassword = async (credentials) => {
+  const result = await originalSignInWithPassword(credentials)
   if (!result.error && result.data?.session) {
     notifySameTab('SIGNED_IN', result.data.session)
   }
   return result
 }
+
+// Password set/reset by emailed code. The Supabase-style resetPasswordForEmail
+// sends a link, which needs custom SMTP; codes work with Neon's shared email.
+// Neither call creates accounts.
+const betterAuth = auth.getBetterAuthInstance()
+
+async function callBetterAuth(fn) {
+  try {
+    const result = await fn()
+    return { error: result?.error ?? null }
+  } catch (error) {
+    return { error }
+  }
+}
+
+export const sendPasswordResetCode = (email) =>
+  callBetterAuth(() =>
+    betterAuth.emailOtp.sendVerificationOtp({ email, type: 'forget-password' })
+  )
+
+export const resetPasswordWithCode = (email, code, password) =>
+  callBetterAuth(() =>
+    betterAuth.emailOtp.resetPassword({ email, otp: code, password })
+  )
 
 const originalSignOut = auth.signOut
 auth.signOut = async (...args) => {

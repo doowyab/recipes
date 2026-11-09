@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { client } from '../lib/neon'
+import { client, resetPasswordWithCode, sendPasswordResetCode } from '../lib/neon'
 
+const MIN_PASSWORD_LENGTH = 8
+
+const inputClass =
+  'w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sky-900 placeholder:text-sky-400 focus:border-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-900/20 disabled:opacity-60 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40'
+const linkButtonClass = 'text-xs text-sky-600 underline dark:text-sky-300'
+
+// Modes: "signin" (email + password), "reset-request" (email a code), "reset" (code + new password).
 export default function Login() {
+  const [mode, setMode] = useState('signin')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [code, setCode] = useState('')
-  const [codeSent, setCodeSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [error, setError] = useState(null)
@@ -38,45 +47,99 @@ export default function Login() {
     }
   }, [navigate])
 
-  const handleLogin = async (event) => {
+  const switchMode = (nextMode) => {
+    setMode(nextMode)
+    setPassword('')
+    setConfirmPassword('')
+    setCode('')
+    setMessage(null)
+    setError(null)
+  }
+
+  const signIn = (signInPassword) =>
+    client.auth.signInWithPassword({ email: email.trim(), password: signInPassword })
+
+  const handleSignIn = async (event) => {
     event.preventDefault()
     setLoading(true)
     setMessage(null)
     setError(null)
 
-    if (!codeSent) {
-      const { error: signInError } = await client.auth.signInWithOtp({ email })
-
-      if (signInError) {
-        setError(signInError.message)
-      } else {
-        setCodeSent(true)
-        setMessage('Check your email for your sign-in code.')
-      }
-      setLoading(false)
-      return
-    }
-
-    const { error: verifyError } = await client.auth.verifyOtp({
-      email,
-      token: code.trim(),
-      type: 'email',
-    })
-
-    if (verifyError) {
-      setError(verifyError.message)
+    const { error: signInError } = await signIn(password)
+    if (signInError) {
+      setError(
+        'Incorrect email or password. If you haven’t set a password yet, use “Set or reset password” below.'
+      )
       setLoading(false)
       return
     }
     navigate('/', { replace: true })
   }
 
-  const handleUseDifferentEmail = () => {
-    setCodeSent(false)
-    setCode('')
+  const handleSendResetCode = async (event) => {
+    event.preventDefault()
+    setLoading(true)
     setMessage(null)
     setError(null)
+
+    const { error: sendError } = await sendPasswordResetCode(email.trim())
+    if (sendError) {
+      setError(sendError.message || 'Couldn’t send a code. Please try again.')
+    } else {
+      setMode('reset')
+      setMessage(
+        `If ${email.trim()} has access, we’ve emailed it a code. Enter it below with your new password.`
+      )
+    }
+    setLoading(false)
   }
+
+  const handleResetPassword = async (event) => {
+    event.preventDefault()
+    setError(null)
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Your password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('The passwords don’t match.')
+      return
+    }
+
+    setLoading(true)
+    const { error: resetError } = await resetPasswordWithCode(
+      email.trim(),
+      code.trim(),
+      password
+    )
+    if (resetError) {
+      setError('That code didn’t work. Check it and try again, or request a new one.')
+      setLoading(false)
+      return
+    }
+
+    const { error: signInError } = await signIn(password)
+    if (signInError) {
+      switchMode('signin')
+      setMessage('Your password is set. Please sign in.')
+      setLoading(false)
+      return
+    }
+    navigate('/', { replace: true })
+  }
+
+  const submitLabel = {
+    signin: loading ? 'Signing in...' : 'Sign In',
+    'reset-request': loading ? 'Sending...' : 'Email Me a Code',
+    reset: loading ? 'Saving...' : 'Set Password & Sign In',
+  }[mode]
+
+  const onSubmit = {
+    signin: handleSignIn,
+    'reset-request': handleSendResetCode,
+    reset: handleResetPassword,
+  }[mode]
 
   return (
     <>
@@ -105,9 +168,6 @@ export default function Login() {
         {message ? (
           <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-100">
             <p className="font-medium">{message}</p>
-            <p className="mt-1 text-xs text-emerald-700/80 dark:text-emerald-200/80">
-              Enter the code below to finish signing in.
-            </p>
           </div>
         ) : null}
 
@@ -117,7 +177,13 @@ export default function Login() {
           </div>
         ) : null}
 
-        <form className="space-y-5" onSubmit={handleLogin}>
+        <form className="space-y-5" onSubmit={onSubmit}>
+          {mode === 'reset-request' ? (
+            <p className="text-center text-sm text-sky-600 dark:text-sky-300">
+              Enter your email and we&apos;ll send you a code to set a new password.
+            </p>
+          ) : null}
+
           <div>
             <label className="form-label" htmlFor="email">
               <span>Email address</span>
@@ -125,40 +191,83 @@ export default function Login() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               placeholder="you@example.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              disabled={codeSent}
-              className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sky-900 placeholder:text-sky-400 focus:border-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-900/20 disabled:opacity-60 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+              disabled={mode === 'reset'}
+              className={inputClass}
             />
           </div>
 
-          {codeSent ? (
+          {mode === 'signin' ? (
             <div>
-              <label className="form-label" htmlFor="code">
-                <span>Sign-in code</span>
+              <label className="form-label" htmlFor="password">
+                <span>Password</span>
               </label>
               <input
-                id="code"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="123456"
-                value={code}
-                onChange={(event) => setCode(event.target.value)}
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 required
-                autoFocus
-                className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 tracking-[0.3em] text-sky-900 placeholder:text-sky-400 focus:border-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+                className={inputClass}
               />
-              <button
-                type="button"
-                onClick={handleUseDifferentEmail}
-                className="mt-2 text-xs text-sky-600 underline dark:text-sky-300"
-              >
-                Use a different email
-              </button>
             </div>
+          ) : null}
+
+          {mode === 'reset' ? (
+            <>
+              <div>
+                <label className="form-label" htmlFor="code">
+                  <span>Code</span>
+                </label>
+                <input
+                  id="code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  required
+                  autoFocus
+                  className={`${inputClass} tracking-[0.3em]`}
+                />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="new-password">
+                  <span>New password</span>
+                </label>
+                <input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="confirm-password">
+                  <span>Confirm new password</span>
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  className={inputClass}
+                />
+              </div>
+            </>
           ) : null}
 
           <button
@@ -167,21 +276,27 @@ export default function Login() {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-900 px-6 py-3 font-semibold text-white shadow-lg shadow-black/10 transition hover:-transky-y-0.5 hover:bg-sky-800 disabled:transky-y-0 disabled:cursor-not-allowed disabled:bg-sky-300 dark:bg-white dark:text-sky-900 dark:shadow-black/20 dark:hover:bg-sky-100"
           >
             {loading ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200/40 border-t-sky-200 dark:border-sky-900/40 dark:border-t-sky-900" />
-                {codeSent ? 'Signing in...' : 'Sending...'}
-              </>
-            ) : codeSent ? (
-              'Sign In'
-            ) : (
-              'Email Me a Code'
-            )}
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200/40 border-t-sky-200 dark:border-sky-900/40 dark:border-t-sky-900" />
+            ) : null}
+            {submitLabel}
           </button>
-        </form>
 
-        <p className="mt-5 text-center text-xs text-sky-500 dark:text-sky-400">
-          No password required. We&apos;ll email you a one-time sign-in code.
-        </p>
+          <div className="text-center">
+            {mode === 'signin' ? (
+              <button type="button" onClick={() => switchMode('reset-request')} className={linkButtonClass}>
+                Set or reset password
+              </button>
+            ) : mode === 'reset-request' ? (
+              <button type="button" onClick={() => switchMode('signin')} className={linkButtonClass}>
+                Back to sign in
+              </button>
+            ) : (
+              <button type="button" onClick={() => switchMode('reset-request')} className={linkButtonClass}>
+                Resend the code
+              </button>
+            )}
+          </div>
+        </form>
       </div>
     </div>
     </>
