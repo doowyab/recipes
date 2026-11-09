@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 export default function Migrate() {
   const navigate = useNavigate()
@@ -21,7 +21,7 @@ export default function Migrate() {
       setLoading(true)
       setError('')
 
-      const { data: userData, error: userError } = await supabase.auth.getUser()
+      const { data: userData, error: userError } = await client.auth.getUser()
       if (!isMounted) return
 
       if (userError) {
@@ -37,7 +37,7 @@ export default function Migrate() {
         return
       }
 
-      const { data: memberRow, error: memberError } = await supabase
+      const { data: memberRow, error: memberError } = await client
         .from('household_members')
         .select('household_id')
         .eq('user_id', user.id)
@@ -58,7 +58,7 @@ export default function Migrate() {
         return
       }
 
-      const { data: householdRow, error: householdError } = await supabase
+      const { data: householdRow, error: householdError } = await client
         .from('households')
         .select('id, name')
         .eq('id', memberRow.household_id)
@@ -73,11 +73,11 @@ export default function Migrate() {
       setHousehold(householdRow ?? null)
 
       const [planRows, menuRows] = await Promise.all([
-        supabase
+        client
           .from('plan_recipes')
           .select('recipe_id')
           .eq('household_id', memberRow.household_id),
-        supabase
+        client
           .from('menu_recipes')
           .select('recipe_id')
           .eq('household_id', memberRow.household_id),
@@ -104,10 +104,10 @@ export default function Migrate() {
 
       const [planRecipesResult, menuRecipesResult] = await Promise.all([
         planIds.length > 0
-          ? supabase.from('recipes').select('id, title').in('id', planIds).order('title')
+          ? client.from('recipes').select('id, title').in('id', planIds).order('title')
           : Promise.resolve({ data: [], error: null }),
         menuIds.length > 0
-          ? supabase.from('recipes').select('id, title').in('id', menuIds).order('title')
+          ? client.from('recipes').select('id, title').in('id', menuIds).order('title')
           : Promise.resolve({ data: [], error: null }),
       ])
 
@@ -156,7 +156,7 @@ export default function Migrate() {
     const planIds = planRecipes.map((recipe) => recipe.id)
 
     if (pendingAction === 'replace') {
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await client
         .from('menu_recipes')
         .delete()
         .eq('household_id', household.id)
@@ -178,7 +178,7 @@ export default function Migrate() {
         }))
 
       if (rows.length > 0) {
-        const { error: insertError } = await supabase
+        const { error: insertError } = await client
           .from('menu_recipes')
           .insert(rows)
 
@@ -190,7 +190,7 @@ export default function Migrate() {
       }
     }
 
-    const { error: clearPlanError } = await supabase
+    const { error: clearPlanError } = await client
       .from('plan_recipes')
       .delete()
       .eq('household_id', household.id)

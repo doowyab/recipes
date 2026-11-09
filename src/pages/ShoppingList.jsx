@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 const SECTION_ORDER = [
   'Fruit & Vegtables',
@@ -205,7 +205,7 @@ export default function ShoppingList() {
       setLoading(true)
       setError('')
 
-      const { data: userData, error: userError } = await supabase.auth.getUser()
+      const { data: userData, error: userError } = await client.auth.getUser()
 
       if (!isMounted) return
 
@@ -223,7 +223,7 @@ export default function ShoppingList() {
         return
       }
 
-      const { data: memberRow, error: memberError } = await supabase
+      const { data: memberRow, error: memberError } = await client
         .from('household_members')
         .select('household_id')
         .eq('user_id', user.id)
@@ -243,7 +243,7 @@ export default function ShoppingList() {
         return
       }
 
-      const { data: householdRow, error: householdError } = await supabase
+      const { data: householdRow, error: householdError } = await client
         .from('households')
         .select('id, name')
         .eq('id', memberRow.household_id)
@@ -257,7 +257,7 @@ export default function ShoppingList() {
 
       setHousehold(householdRow ?? null)
 
-      const { data: planRows, error: planError } = await supabase
+      const { data: planRows, error: planError } = await client
         .from('plan_recipes')
         .select('recipe_id')
         .eq('household_id', memberRow.household_id)
@@ -279,7 +279,7 @@ export default function ShoppingList() {
         return
       }
 
-      const { data: plannedRows, error: plannedError } = await supabase
+      const { data: plannedRows, error: plannedError } = await client
         .from('recipes')
         .select(
           'id, title, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, supermarket_section ) )'

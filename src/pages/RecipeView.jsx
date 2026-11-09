@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useParams } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 function formatHeatBadge(value) {
   const heat = Number.parseInt(value, 10)
@@ -14,6 +14,7 @@ export default function RecipeView() {
   const [recipe, setRecipe] = useState(null)
   const [ingredients, setIngredients] = useState([])
   const [steps, setSteps] = useState([])
+  const [cookedNotes, setCookedNotes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeStepId, setActiveStepId] = useState(null)
@@ -71,6 +72,24 @@ export default function RecipeView() {
       badge.value !== ''
   )
   const heatBadge = formatHeatBadge(recipe?.heat)
+  const ratings = useMemo(
+    () =>
+      cookedNotes
+        .map((entry) => Number(entry.rating))
+        .filter((rating) => !Number.isNaN(rating) && rating > 0),
+    [cookedNotes]
+  )
+  const averageRating =
+    ratings.length > 0
+      ? ratings.reduce((total, rating) => total + rating, 0) / ratings.length
+      : null
+  const comments = useMemo(
+    () =>
+      cookedNotes.filter(
+        (entry) => typeof entry.note === 'string' && entry.note.trim() !== ''
+      ),
+    [cookedNotes]
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -80,25 +99,30 @@ export default function RecipeView() {
       setLoading(true)
       setError('')
 
-      const [recipeResult, ingredientsResult, stepsResult] = await Promise.all([
-        supabase
+      const [recipeResult, ingredientsResult, stepsResult, cookedNotesResult] = await Promise.all([
+        client
           .from('recipes')
           .select(
             'id, title, description, pre_minutes, cook_minutes, servings, heat'
           )
           .eq('id', recipeId)
           .single(),
-        supabase
+        client
           .from('recipe_ingredients')
           .select(
             'ingredient_id, quantity, unit, notes, ingredients ( id, name, default_unit )'
           )
           .eq('recipe_id', recipeId),
-        supabase
+        client
           .from('recipe_steps')
           .select('id, position, instruction, is_heading')
           .eq('recipe_id', recipeId)
           .order('position', { ascending: true }),
+        client
+          .from('cooked_notes')
+          .select('id, created_at, note, rating')
+          .eq('recipe_id', recipeId)
+          .order('created_at', { ascending: false }),
       ])
 
       if (!isMounted) return
@@ -131,6 +155,13 @@ export default function RecipeView() {
         setSteps([])
       } else {
         setSteps(stepsResult.data ?? [])
+      }
+
+      if (cookedNotesResult.error) {
+        setError(cookedNotesResult.error.message ?? 'Unable to load comments.')
+        setCookedNotes([])
+      } else {
+        setCookedNotes(cookedNotesResult.data ?? [])
       }
 
       setLoading(false)
@@ -179,6 +210,13 @@ export default function RecipeView() {
     return nonHeadingSteps[currentIndex - 1]?.id ?? null
   }
 
+  function renderStars(value) {
+    const filledStars = Math.round(Number(value) || 0)
+    return Array.from({ length: 5 }, (_, index) =>
+      index < filledStars ? '★' : '☆'
+    ).join('')
+  }
+
   return (
     <>
       <Helmet>
@@ -216,6 +254,19 @@ export default function RecipeView() {
                       {heatBadge}
                     </span>
                   ) : null}
+                </div>
+              ) : null}
+              {averageRating !== null ? (
+                <div className="mt-4 flex items-center gap-3 text-sky-700 dark:text-sky-200">
+                  <span className="text-xl tracking-[0.2em] text-amber-400">
+                    {renderStars(averageRating)}
+                  </span>
+                  <span className="text-sm font-semibold">
+                    {averageRating.toFixed(1)} / 5
+                  </span>
+                  <span className="text-xs text-sky-500 dark:text-sky-400">
+                    {ratings.length} rating{ratings.length === 1 ? '' : 's'}
+                  </span>
                 </div>
               ) : null}
             </div>
@@ -339,6 +390,34 @@ export default function RecipeView() {
                       Next Step
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
+            <div className="rounded-2xl bg-transparent md:col-span-2">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-500 dark:text-sky-400">
+                Comments
+              </h2>
+              {comments.length === 0 ? (
+                <p className="mt-5 text-sm text-sky-500 dark:text-sky-400">
+                  No comments yet.
+                </p>
+              ) : (
+                <div className="mt-5 space-y-4">
+                  {comments.map((comment) => (
+                    <article
+                      key={comment.id}
+                      className="rounded-2xl border border-sky-200 bg-sky-50/70 px-4 py-4 dark:border-sky-800 dark:bg-sky-900/40"
+                    >
+                      {comment.rating ? (
+                        <p className="text-sm tracking-[0.2em] text-amber-400">
+                          {renderStars(comment.rating)}
+                        </p>
+                      ) : null}
+                      <p className="mt-2 text-sm text-sky-700 dark:text-sky-200">
+                        {comment.note}
+                      </p>
+                    </article>
+                  ))}
                 </div>
               )}
             </div>

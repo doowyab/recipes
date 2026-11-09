@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import IngredientsSection from '../components/IngredientsSection'
 import RecipeBasicsPanel from '../components/RecipeBasicsPanel'
 import RecipeStepsSection from '../components/RecipeStepsSection'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 function toIntOrNull(value) {
   if (value === '' || value === null || value === undefined) return null
@@ -33,7 +33,7 @@ export default function RecipeEdit() {
       setLoading(true)
       setStatus('')
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('recipes')
         .select('title, description, pre_minutes, cook_minutes, servings, heat')
         .eq('id', recipeId)
@@ -85,7 +85,7 @@ export default function RecipeEdit() {
         throw new Error('Recipe title is required.')
       }
 
-      const { error } = await supabase
+      const { error } = await client
         .from('recipes')
         .update(payload)
         .eq('id', recipeId)

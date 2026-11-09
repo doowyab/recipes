@@ -23,14 +23,14 @@ export default function About() {
           <p className="mt-2 text-sm text-sky-600 dark:text-sky-300 md:text-base">
             The backend is{' '}
             <a
-              href="https://supabase.com"
+              href="https://neon.com"
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-sky-700 underline decoration-sky-300 underline-offset-2 transition hover:text-sky-900 dark:text-sky-200 dark:decoration-sky-600 dark:hover:text-white"
             >
-              Supabase
+              Neon
             </a>{' '}
-            with a hosted PostgreSQL database.
+            with a serverless PostgreSQL database.
           </p>
           <p className="mt-2 text-sm text-sky-600 dark:text-sky-300 md:text-base">
             The application was written with the assistance of ChatGPT Codex.

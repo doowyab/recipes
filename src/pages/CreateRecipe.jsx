@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 function toIntOrNull(value) {
   if (value === '' || value === null || value === undefined) return null
@@ -150,7 +150,7 @@ export default function CreateRecipe() {
   const [status, setStatus] = useState('')
 
   async function getUserId() {
-    const { data, error } = await supabase.auth.getUser()
+    const { data, error } = await client.auth.getUser()
     if (error || !data?.user) {
       throw new Error('You need to be signed in to save recipes.')
     }
@@ -180,7 +180,7 @@ export default function CreateRecipe() {
         throw new Error('Heat level must be between 0 and 3.')
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('recipes')
         .insert(payload)
         .select('id')

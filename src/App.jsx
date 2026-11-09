@@ -13,7 +13,7 @@ import Mortgage from './pages/Mortgage'
 import Plan from './pages/Plan'
 import Recipes from './pages/Recipes'
 import ShoppingList from './pages/ShoppingList'
-import { supabase } from './lib/supabase'
+import { client } from './lib/neon'
 import RecipeEdit from './pages/RecipeEdit.jsx'
 import RecipeView from './pages/RecipeView.jsx'
 
@@ -29,14 +29,14 @@ function App() {
     let isMounted = true
 
     async function loadUser() {
-      const { data } = await supabase.auth.getUser()
+      const { data } = await client.auth.getUser()
       if (isMounted) {
         setUser(data?.user ?? null)
         setAuthLoading(false)
       }
     }
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = client.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null)
         setAuthLoading(false)
@@ -82,7 +82,7 @@ function App() {
             {user ? (
               <button
                 type="button"
-                onClick={() => supabase.auth.signOut()}
+                onClick={() => client.auth.signOut()}
                 className="rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
               >
                 Log Out
@@ -148,7 +148,7 @@ function App() {
                 {user ? (
                   <button
                     type="button"
-                    onClick={() => supabase.auth.signOut()}
+                    onClick={() => client.auth.signOut()}
                     className="w-full rounded-full border border-sky-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
                   >
                     Log Out
@@ -229,6 +229,14 @@ function App() {
             <Link className="transition hover:text-sky-900 dark:hover:text-white" to="/household">
               Your Household
             </Link>
+            <a
+              className="transition hover:text-sky-900 dark:hover:text-white"
+              href="https://doowyab.github.io/wishlist/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Wishlist
+            </a>
           </div>
         </div>
       </footer>

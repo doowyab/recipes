@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 export default function Contact() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -9,13 +9,13 @@ export default function Contact() {
     let isMounted = true
 
     async function loadUser() {
-      const { data } = await supabase.auth.getUser()
+      const { data } = await client.auth.getUser()
       if (isMounted) {
         setIsLoggedIn(Boolean(data?.user))
       }
     }
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = client.auth.onAuthStateChange(
       (_event, session) => {
         setIsLoggedIn(Boolean(session?.user))
       }

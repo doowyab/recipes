@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 const SUPERMARKET_SECTIONS = [
   'Fruit & Vegtables',
@@ -96,7 +96,7 @@ export default function IngredientsSection({ recipeId }) {
     setLoading(true)
     setError('')
 
-    const { data, error: fetchError } = await supabase
+    const { data, error: fetchError } = await client
       .from('recipe_ingredients')
       .select(
         'ingredient_id, quantity, unit, notes, ingredients ( id, name, default_unit, default_quantity, supermarket_section )'
@@ -135,7 +135,7 @@ export default function IngredientsSection({ recipeId }) {
       }
 
       setSearching(true)
-      const { data, error: searchError } = await supabase
+      const { data, error: searchError } = await client
         .from('ingredients')
         .select('id, name, default_unit, default_quantity, supermarket_section')
         .ilike('name', `%${normalizedQuery}%`)
@@ -321,7 +321,7 @@ export default function IngredientsSection({ recipeId }) {
     if (!recipeId) return
     setActionStatus('')
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await client
       .from('recipe_ingredients')
       .insert({
         recipe_id: recipeId,
@@ -353,7 +353,7 @@ export default function IngredientsSection({ recipeId }) {
     if (!recipeId || !ingredientId) return
     setActionStatus('')
 
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await client
       .from('recipe_ingredients')
       .delete()
       .eq('recipe_id', recipeId)
@@ -377,7 +377,7 @@ export default function IngredientsSection({ recipeId }) {
       return
     }
 
-    const { data, error: createError } = await supabase
+    const { data, error: createError } = await client
       .from('ingredients')
       .insert({
         name: query.trim(),

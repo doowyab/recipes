@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 const SUPERMARKET_SECTIONS = [
   'Fruit & Vegtables',
@@ -16,11 +16,11 @@ const SUPERMARKET_SECTIONS = [
 async function fetchIngredientsWithUsage() {
   const [{ data: ingredientRows, error: ingredientError }, { data: usageRows, error: usageError }] =
     await Promise.all([
-      supabase
+      client
         .from('ingredients')
         .select('id, name, is_synergy_core, default_unit, default_quantity, supermarket_section')
         .order('name', { ascending: true }),
-      supabase.from('recipe_ingredients').select('ingredient_id'),
+      client.from('recipe_ingredients').select('ingredient_id'),
     ])
 
   if (ingredientError) {
@@ -160,7 +160,7 @@ export default function Ingredients() {
     setSaveError('')
     setSaveSuccess('')
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await client
       .from('ingredients')
       .update({
         name: trimmedName,
@@ -203,7 +203,7 @@ export default function Ingredients() {
     setDeleteError('')
     setSaveSuccess('')
 
-    const { error: removeError } = await supabase
+    const { error: removeError } = await client
       .from('ingredients')
       .delete()
       .eq('id', deleteTarget.id)
@@ -247,7 +247,7 @@ export default function Ingredients() {
     setUsageLoading(true)
     setUsageError('')
 
-    const { data, error: usageFetchError } = await supabase
+    const { data, error: usageFetchError } = await client
       .from('recipe_ingredients')
       .select('recipes ( id, title )')
       .eq('ingredient_id', ingredient.id)

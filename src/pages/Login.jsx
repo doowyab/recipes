@@ -1,27 +1,28 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 export default function Login() {
   const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [codeSent, setCodeSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
-  const emailRedirectTo = new URL(import.meta.env.BASE_URL, window.location.origin).toString()
 
   useEffect(() => {
     let isMounted = true
 
     async function redirectIfAuthed() {
-      const { data } = await supabase.auth.getUser()
+      const { data } = await client.auth.getUser()
       if (isMounted && data?.user) {
         navigate('/', { replace: true })
       }
     }
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = client.auth.onAuthStateChange(
       (_event, session) => {
         if (session?.user) {
           navigate('/', { replace: true })
@@ -43,19 +44,38 @@ export default function Login() {
     setMessage(null)
     setError(null)
 
-    const { error: signInError } = await supabase.auth.signInWithOtp({
+    if (!codeSent) {
+      const { error: signInError } = await client.auth.signInWithOtp({ email })
+
+      if (signInError) {
+        setError(signInError.message)
+      } else {
+        setCodeSent(true)
+        setMessage('Check your email for your sign-in code.')
+      }
+      setLoading(false)
+      return
+    }
+
+    const { error: verifyError } = await client.auth.verifyOtp({
       email,
-      options: {
-        emailRedirectTo,
-      },
+      token: code.trim(),
+      type: 'email',
     })
 
-    if (signInError) {
-      setError(signInError.message)
-    } else {
-      setMessage('Check your email for your magic link!')
+    if (verifyError) {
+      setError(verifyError.message)
+      setLoading(false)
+      return
     }
-    setLoading(false)
+    navigate('/', { replace: true })
+  }
+
+  const handleUseDifferentEmail = () => {
+    setCodeSent(false)
+    setCode('')
+    setMessage(null)
+    setError(null)
   }
 
   return (
@@ -86,7 +106,7 @@ export default function Login() {
           <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-100">
             <p className="font-medium">{message}</p>
             <p className="mt-1 text-xs text-emerald-700/80 dark:text-emerald-200/80">
-              This link expires in 1 hour.
+              Enter the code below to finish signing in.
             </p>
           </div>
         ) : null}
@@ -109,9 +129,37 @@ export default function Login() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sky-900 placeholder:text-sky-400 focus:border-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+              disabled={codeSent}
+              className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sky-900 placeholder:text-sky-400 focus:border-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-900/20 disabled:opacity-60 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
             />
           </div>
+
+          {codeSent ? (
+            <div>
+              <label className="form-label" htmlFor="code">
+                <span>Sign-in code</span>
+              </label>
+              <input
+                id="code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="123456"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                required
+                autoFocus
+                className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 tracking-[0.3em] text-sky-900 placeholder:text-sky-400 focus:border-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-900/20 dark:border-sky-800 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-white dark:focus:ring-white/40"
+              />
+              <button
+                type="button"
+                onClick={handleUseDifferentEmail}
+                className="mt-2 text-xs text-sky-600 underline dark:text-sky-300"
+              >
+                Use a different email
+              </button>
+            </div>
+          ) : null}
 
           <button
             type="submit"
@@ -121,16 +169,18 @@ export default function Login() {
             {loading ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200/40 border-t-sky-200 dark:border-sky-900/40 dark:border-t-sky-900" />
-                Sending...
+                {codeSent ? 'Signing in...' : 'Sending...'}
               </>
+            ) : codeSent ? (
+              'Sign In'
             ) : (
-              'Send Magic Link'
+              'Email Me a Code'
             )}
           </button>
         </form>
 
         <p className="mt-5 text-center text-xs text-sky-500 dark:text-sky-400">
-          No password required. We&apos;ll email you a secure sign-in link.
+          No password required. We&apos;ll email you a one-time sign-in code.
         </p>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 export default function Households() {
   const [userId, setUserId] = useState('')
@@ -23,7 +23,7 @@ export default function Households() {
     setLoading(true)
     setError('')
 
-    const { data: userData, error: userError } = await supabase.auth.getUser()
+    const { data: userData, error: userError } = await client.auth.getUser()
 
     if (userError) {
       setError(userError.message ?? 'Unable to load your account.')
@@ -41,7 +41,7 @@ export default function Households() {
 
     setUserId(user.id)
 
-    const { data: memberRows, error: memberError } = await supabase
+    const { data: memberRows, error: memberError } = await client
       .from('household_members')
       .select('household_id')
       .eq('user_id', user.id)
@@ -57,7 +57,7 @@ export default function Households() {
       .filter(Boolean)
 
     if (householdIds.length > 0) {
-      const { data: households, error: householdsError } = await supabase
+      const { data: households, error: householdsError } = await client
         .from('households')
         .select('id, name')
         .in('id', householdIds)
@@ -75,7 +75,7 @@ export default function Households() {
       return
     }
 
-    const { data: allHouseholds, error: allHouseholdsError } = await supabase
+    const { data: allHouseholds, error: allHouseholdsError } = await client
       .from('households')
       .select('id, name')
       .order('name')
@@ -101,7 +101,7 @@ export default function Households() {
     setJoiningId(householdId)
     setError('')
 
-    const { error: joinError } = await supabase
+    const { error: joinError } = await client
       .from('household_members')
       .insert({ user_id: userId, household_id: householdId })
 
@@ -121,7 +121,7 @@ export default function Households() {
     setLeavingId(householdId)
     setError('')
 
-    const { error: leaveError } = await supabase
+    const { error: leaveError } = await client
       .from('household_members')
       .delete()
       .eq('user_id', userId)
@@ -156,7 +156,7 @@ export default function Households() {
     setCreating(true)
     setError('')
 
-    const { data, error: createError } = await supabase
+    const { data, error: createError } = await client
       .from('households')
       .insert({ name: newHouseholdName.trim() })
       .select('id, name')
@@ -182,7 +182,7 @@ export default function Households() {
     setJoiningCreated(true)
     setError('')
 
-    const { error: joinError } = await supabase.from('household_members').insert({
+    const { error: joinError } = await client.from('household_members').insert({
       user_id: userId,
       household_id: pendingHousehold.id,
     })

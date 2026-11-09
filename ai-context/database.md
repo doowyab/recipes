@@ -5,7 +5,7 @@ id uuid PK
 name text
 
 ## household_members
-user_id uuid FK → auth.users.id  
+user_id uuid FK → neon_auth."user".id  
 household_id uuid FK → households.id  
 PK (user_id, household_id)
 
@@ -14,7 +14,7 @@ id uuid PK
 created_at timestamptz  
 title text  
 description text  
-owner_id uuid FK → auth.users.id  
+owner_id uuid FK → neon_auth."user".id  
 pre_minutes int2  
 cook_minutes int2  
 servings int2  
@@ -55,14 +55,21 @@ id uuid PK
 recipe_id uuid FK → recipes.id  
 household_id uuid FK → households.id
 
+## cooked_notes
+id bigint PK (identity)
+created_at timestamptz
+recipe_id uuid
+note text
+rating int2
+
 ---
 
 ## Relationships
 
-auth.users → household_members (1:N)  
+neon_auth."user" → household_members (1:N)  
 households → household_members (1:N)
 
-auth.users → recipes (1:N)
+neon_auth."user" → recipes (1:N)
 
 recipes → recipe_steps (1:N)  
 recipes → recipe_ingredients (1:N)  
@@ -73,3 +80,4 @@ recipes → menu_recipes (1:N)
 
 households → plan_recipes (1:N)  
 recipes → plan_recipes (1:N)
+cooked_notes -> recipes (N:1)

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import RecipeFilterControls from '../components/RecipeFilterControls'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 function formatMinutes(value) {
   if (value === null || value === undefined || value === '') return '—'
@@ -35,7 +35,7 @@ export default function Recipes() {
       setLoading(true)
       setError('')
 
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await client
         .from('recipes')
         .select(
           'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( ingredients ( id, name ) )'
@@ -82,7 +82,7 @@ export default function Recipes() {
     setDeletingId(pendingDeleteRecipe.id)
     setDeleteError('')
 
-    const { error: removeError } = await supabase
+    const { error: removeError } = await client
       .from('recipes')
       .delete()
       .eq('id', pendingDeleteRecipe.id)

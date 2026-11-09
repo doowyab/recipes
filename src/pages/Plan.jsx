@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import RecipeFilterControls from '../components/RecipeFilterControls'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 function formatQuantity(quantity, unit, defaultUnit) {
   const resolvedUnit = unit || defaultUnit || ''
@@ -84,7 +84,7 @@ export default function Plan() {
       setLoading(true)
       setError('')
 
-      const { data: userData, error: userError } = await supabase.auth.getUser()
+      const { data: userData, error: userError } = await client.auth.getUser()
 
       if (!isMounted) return
 
@@ -102,7 +102,7 @@ export default function Plan() {
         return
       }
 
-      const { data: memberRow, error: memberError } = await supabase
+      const { data: memberRow, error: memberError } = await client
         .from('household_members')
         .select('household_id')
         .eq('user_id', user.id)
@@ -122,7 +122,7 @@ export default function Plan() {
         return
       }
 
-      const { data: householdRow, error: householdError } = await supabase
+      const { data: householdRow, error: householdError } = await client
         .from('households')
         .select('id, name')
         .eq('id', memberRow.household_id)
@@ -136,7 +136,7 @@ export default function Plan() {
 
       setHousehold(householdRow ?? null)
 
-      const { data: planRows, error: planError } = await supabase
+      const { data: planRows, error: planError } = await client
         .from('plan_recipes')
         .select('recipe_id')
         .eq('household_id', memberRow.household_id)
@@ -156,7 +156,7 @@ export default function Plan() {
 
       let plannedNormalized = []
       if (recipeIds.length > 0) {
-        const { data: plannedRows, error: plannedError } = await supabase
+        const { data: plannedRows, error: plannedError } = await client
           .from('recipes')
           .select(
             'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
@@ -202,7 +202,7 @@ export default function Plan() {
         setRecipes([])
       }
 
-      const { data: allRows, error: allError } = await supabase
+      const { data: allRows, error: allError } = await client
         .from('recipes')
         .select(
           'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit, is_synergy_core ) )'
@@ -259,7 +259,7 @@ export default function Plan() {
     setAddingId(recipeId)
     setError('')
 
-    const { error: addError } = await supabase
+    const { error: addError } = await client
       .from('plan_recipes')
       .insert({ household_id: household.id, recipe_id: recipeId })
 
@@ -286,7 +286,7 @@ export default function Plan() {
     setRemovingId(recipeId)
     setError('')
 
-    const { error: removeError } = await supabase
+    const { error: removeError } = await client
       .from('plan_recipes')
       .delete()
       .eq('household_id', household.id)

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import RecipeFilterControls from '../components/RecipeFilterControls'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 function formatMinutes(value) {
   if (value === null || value === undefined || value === '') return ''
@@ -28,6 +28,8 @@ export default function Menu() {
   const [sortDirection, setSortDirection] = useState('asc')
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [selectedServings, setSelectedServings] = useState('')
+  const [cookedNote, setCookedNote] = useState('')
+  const [cookedRating, setCookedRating] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -36,7 +38,7 @@ export default function Menu() {
       setLoading(true)
       setError('')
 
-      const { data: userData, error: userError } = await supabase.auth.getUser()
+      const { data: userData, error: userError } = await client.auth.getUser()
       if (!isMounted) return
 
       if (userError) {
@@ -52,7 +54,7 @@ export default function Menu() {
         return
       }
 
-      const { data: memberRow, error: memberError } = await supabase
+      const { data: memberRow, error: memberError } = await client
         .from('household_members')
         .select('household_id')
         .eq('user_id', user.id)
@@ -72,7 +74,7 @@ export default function Menu() {
         return
       }
 
-      const { data: householdRow, error: householdError } = await supabase
+      const { data: householdRow, error: householdError } = await client
         .from('households')
         .select('id, name')
         .eq('id', memberRow.household_id)
@@ -86,7 +88,7 @@ export default function Menu() {
 
       setHousehold(householdRow ?? null)
 
-      const { data: menuRows, error: menuError } = await supabase
+      const { data: menuRows, error: menuError } = await client
         .from('menu_recipes')
         .select('recipe_id')
         .eq('household_id', memberRow.household_id)
@@ -106,7 +108,7 @@ export default function Menu() {
         return
       }
 
-      const { data: recipeRows, error: recipeError } = await supabase
+      const { data: recipeRows, error: recipeError } = await client
         .from('recipes')
         .select(
           'id, title, description, pre_minutes, cook_minutes, servings, heat, recipe_ingredients ( quantity, unit, notes, ingredients ( id, name, default_unit ) )'
@@ -155,7 +157,7 @@ export default function Menu() {
     setRemovingId(recipeId)
     setError('')
 
-    const { error: removeError } = await supabase
+    const { error: removeError } = await client
       .from('menu_recipes')
       .delete()
       .eq('household_id', household.id)
@@ -171,18 +173,46 @@ export default function Menu() {
     setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeId))
   }
 
+  const resetConfirmState = () => {
+    setShowConfirm(false)
+    setPendingRemoveId('')
+    setPendingAction('')
+    setCookedNote('')
+    setCookedRating('')
+  }
+
   const handleRequestRemove = (recipeId, action) => {
     setPendingRemoveId(recipeId)
     setPendingAction(action)
+    setCookedNote('')
+    setCookedRating('')
     setShowConfirm(true)
   }
 
   const handleConfirmRemove = async () => {
     if (!pendingRemoveId) return
+
+    if (pendingAction === 'done') {
+      const trimmedNote = cookedNote.trim()
+      const parsedRating =
+        cookedRating === '' ? null : Number.parseInt(cookedRating, 10)
+
+      if (trimmedNote || parsedRating !== null) {
+        const { error: noteError } = await client.from('cooked_notes').insert({
+          recipe_id: pendingRemoveId,
+          note: trimmedNote || null,
+          rating: Number.isNaN(parsedRating) ? null : parsedRating,
+        })
+
+        if (noteError) {
+          setError(noteError.message ?? 'Unable to save cooked note.')
+          return
+        }
+      }
+    }
+
     await handleRemove(pendingRemoveId)
-    setShowConfirm(false)
-    setPendingRemoveId('')
-    setPendingAction('')
+    resetConfirmState()
   }
 
   const filteredRecipes = useMemo(() => {
@@ -373,14 +403,55 @@ export default function Menu() {
             <p className="mt-2 text-sm text-sky-600 dark:text-sky-300">
               This will remove the recipe from your menu.
             </p>
+            {pendingAction === 'done' ? (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-sky-800 dark:text-sky-200">
+                  Note
+                  <textarea
+                    value={cookedNote}
+                    onChange={(event) => setCookedNote(event.target.value)}
+                    rows={4}
+                    placeholder="What worked well? Anything to change next time?"
+                    className="mt-2 w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-sm text-sky-900 outline-none transition placeholder:text-sky-400 focus:border-sky-400 dark:border-sky-700 dark:bg-sky-900 dark:text-sky-100 dark:placeholder:text-sky-500 dark:focus:border-sky-500"
+                  />
+                </label>
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-sky-800 dark:text-sky-200">Rating</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((value) => {
+                      const isFilled = value <= Number(cookedRating || 0)
+
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() =>
+                            setCookedRating((current) => (Number(current) === value ? '' : String(value)))
+                          }
+                          aria-label={`Rate ${value} out of 5`}
+                          aria-pressed={isFilled}
+                          className={`text-2xl leading-none transition ${
+                            isFilled
+                              ? 'text-amber-400 hover:text-amber-500'
+                              : 'text-sky-300 hover:text-amber-300 dark:text-sky-700 dark:hover:text-amber-400'
+                          }`}
+                        >
+                          ★
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-sky-500 dark:text-sky-400">
+                  Add a note, a rating, or both. If both are empty, the recipe will just be removed from
+                  your menu.
+                </p>
+              </div>
+            ) : null}
             <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setShowConfirm(false)
-                  setPendingRemoveId('')
-                  setPendingAction('')
-                }}
+                onClick={resetConfirmState}
                 className="rounded-full border border-sky-200 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-700 dark:text-sky-200 dark:hover:border-sky-500 dark:hover:text-white"
               >
                 Cancel

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { client } from '../lib/neon'
 
 function formatStatusTime(date) {
   return new Intl.DateTimeFormat('en-US', {
@@ -27,7 +27,7 @@ export default function RecipeStepsSection({ recipeId }) {
       setStepsLoading(true)
       setStepsStatus('')
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('recipe_steps')
         .select('id, position, instruction, is_heading')
         .eq('recipe_id', recipeId)
@@ -198,7 +198,7 @@ export default function RecipeStepsSection({ recipeId }) {
 
       if (deletedStepIds.size > 0) {
         const ids = Array.from(deletedStepIds)
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await client
           .from('recipe_steps')
           .delete()
           .in('id', ids)
@@ -206,7 +206,7 @@ export default function RecipeStepsSection({ recipeId }) {
       }
 
       if (existing.length > 0) {
-        const { error: upsertError } = await supabase
+        const { error: upsertError } = await client
           .from('recipe_steps')
           .upsert(existing, { onConflict: 'id' })
         if (upsertError) throw upsertError
@@ -219,7 +219,7 @@ export default function RecipeStepsSection({ recipeId }) {
           instruction: step.instruction,
           is_heading: step.is_heading,
         }))
-        const { error: insertError } = await supabase
+        const { error: insertError } = await client
           .from('recipe_steps')
           .insert(createdPayload)
         if (insertError) throw insertError
@@ -228,7 +228,7 @@ export default function RecipeStepsSection({ recipeId }) {
       setDeletedStepIds(new Set())
       setStepsStatus(`Steps saved at ${formatStatusTime(new Date())}.`)
 
-      const { data, error: refreshError } = await supabase
+      const { data, error: refreshError } = await client
         .from('recipe_steps')
         .select('id, position, instruction, is_heading')
         .eq('recipe_id', recipeId)

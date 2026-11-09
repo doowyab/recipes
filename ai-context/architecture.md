@@ -1,4 +1,4 @@
 Frontend: React
-Backend: Supabase
+Backend: Neon (Data API + Neon Auth, via @neon/neon-js Supabase-compatible client)
 Database: Postgres
 Goal: Recipe synergy discovery using ingredient overlap.
